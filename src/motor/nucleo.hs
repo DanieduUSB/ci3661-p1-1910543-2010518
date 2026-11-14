@@ -3,11 +3,7 @@ module Motor.Nucleo
     , ejecutar
     ) where
 
-import Motor.Tipos
-    ( Mundo
-    , Estado
-    , Comando
-    )
+import Motor.Tipos ( Mundo, Estado, Comando )
 
 estadoInicial :: Mundo -> Estado
 estadoInicial = undefined
