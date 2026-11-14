@@ -9,6 +9,11 @@ module Motor.Tipos
     , ErrorMundo(..)
     ) where
 
+-- Identificador
+
+newtype Id = Id String
+    deriving (Eq, Ord, Show)
+
 -- Mundo
 
 data Mundo = Mundo
@@ -20,10 +25,18 @@ data Sala = Sala
 -- Objeto
 
 data Objeto = Objeto
-    { id :: String
-    , desc :: String
-    , peso :: Int
+    { id    :: Id
+    , desc  :: String
+    , peso  :: Int
     } deriving (Eq, Show)
+
+-- Salida
+
+data Salida = Salida
+    { direccion :: Direccion
+    , destino   :: Id
+    , requisito :: Maybe Id
+    } deriving (Eq, Ord, Show)
 
 -- Direcciones
 
