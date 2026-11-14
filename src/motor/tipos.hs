@@ -23,6 +23,10 @@ newtype IdSala = IdSala String
 -- Mundo
 
 data Mundo = Mundo
+    { titulo :: String
+    , inicio :: IdSala
+    , meta   :: Meta
+    }
 
 -- Sala
 
