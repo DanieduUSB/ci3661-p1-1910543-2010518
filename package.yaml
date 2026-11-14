@@ -35,6 +35,14 @@ ghc-options:
 
 library:
   source-dirs: src
+  exposed-modules:
+    - Lib
+    - Motor.Tipos
+    - Motor.Reconocedor
+    - Motor.Mundo
+    - Motor.Comandos
+    - Motor.Nucleo
+    - Motor.Persistencia
 
 executables:
   aventura-exe:

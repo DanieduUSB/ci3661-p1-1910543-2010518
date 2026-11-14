@@ -26,6 +26,12 @@ source-repository head
 library
   exposed-modules:
       Lib
+      Motor.Tipos
+      Motor.Reconocedor
+      Motor.Mundo
+      Motor.Comandos
+      Motor.Nucleo
+      Motor.Persistencia
   other-modules:
       Paths_aventura
   hs-source-dirs:
