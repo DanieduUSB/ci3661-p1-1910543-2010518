@@ -62,7 +62,9 @@ data Direccion
 
 -- Meta
 
-data Meta = Meta
+data Meta
+    = Llegar IdSala
+    | Llevar IdObjeto IdSala
 
 -- Estado
 
