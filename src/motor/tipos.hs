@@ -9,11 +9,21 @@ module Motor.Tipos
     , ErrorMundo(..)
     ) where
 
+-- Mundo
+
 data Mundo = Mundo
+
+-- Sala
 
 data Sala = Sala
 
+-- Objeto
+
 data Objeto = Objeto
+    { id :: String
+    , desc :: String
+    , peso :: Int
+    } deriving (Eq, Show)
 
 -- Direcciones
 
@@ -26,10 +36,18 @@ data Direccion
     | Abajo
     deriving (Eq, Ord, Show)
 
+-- Meta
+
 data Meta = Meta
+
+-- Estado
 
 data Estado = Estado
 
+-- Comando
+
 data Comando = Comando
+
+-- ErrorMundo
 
 data ErrorMundo = ErrorMundo
