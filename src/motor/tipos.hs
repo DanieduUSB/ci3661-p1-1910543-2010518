@@ -9,18 +9,27 @@ module Motor.Tipos
     , ErrorMundo(..)
     ) where
 
-    data Mundo = Mundo
+data Mundo = Mundo
 
-    data Sala = Sala
+data Sala = Sala
 
-    data Objeto = Objeto
+data Objeto = Objeto
 
-    data Direccion = Direccion
+-- Direcciones
 
-    data Meta = Meta
+data Direccion
+    = Norte
+    | Sur
+    | Este
+    | Oeste
+    | Arriba
+    | Abajo
+    deriving (Eq, Ord, Show)
 
-    data Estado = Estado
+data Meta = Meta
 
-    data Comando = Comando
+data Estado = Estado
 
-    data ErrorMundo = ErrorMundo
+data Comando = Comando
+
+data ErrorMundo = ErrorMundo
