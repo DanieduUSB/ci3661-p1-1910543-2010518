@@ -9,7 +9,6 @@ module Motor.Reconocedor
     , lineaSala
     , lineaDesc
     , lineaSalida
-    , clave
 ) where
 
 import Motor.Tipos
@@ -23,16 +22,17 @@ leerCabecera = undefined
 
 lineaMundo :: ReadS String
 lineaMundo m =
-    [ (titulo, "")  | ("MUNDO", r1) <- lex m
-                    , (":", r2) <- lex r1
-                    , let titulo = dropWhile (== ' ') r2
+    [ (titulo, "")
+    | ((), resto) <- clave "MUNDO" m
+    , let titulo = limpiar resto
+    , not (null titulo)
     ]
         
 lineaInicio :: ReadS IdSala
 lineaInicio i =
-    [ (IdSala sala, "")    | ("INICIO", r1) <- lex i
-                    , (":", r2) <- lex r1
-                    , let sala = dropWhile (== ' ') r2
+    [ (IdSala sala, resto)
+    | ((), r1) <- clave "INICIO" i
+    , (sala, resto) <- identificador r1
     ]
 
 lineaMeta :: ReadS Meta
@@ -43,21 +43,21 @@ leerBloqObj :: ReadS Objeto
 leerBloqObj = undefined
 
 lineaObjeto :: ReadS IdObjeto
-lineaObjeto o = 
-    [ (IdObjeto objeto, "")  | ("OBJETO", r1) <- lex o
-                    , (":", r2) <- lex r1
-                    , let objeto = dropWhile (== ' ') r2
-    ]  
+lineaObjeto o =
+    [ (IdObjeto objeto, resto)
+    | ((), r1) <- clave "OBJETO" o
+    , (objeto, resto) <- identificador r1
+    ]
 
 -- Reconocimiento de bloque de sala
 leerBLoqSala :: ReadS Sala
 leerBLoqSala = undefined
 
 lineaSala :: ReadS IdSala
-lineaSala s = 
-    [ (IdSala sala, "")    | ("SALA", r1) <- lex s
-                    , (":", r2) <- lex r1
-                    , let sala = dropWhile (== ' ') r2
+lineaSala s =
+    [ (IdSala sala, resto)
+    | ((), r1) <- clave "SALA" s
+    , (sala, resto) <- identificador r1
     ]
 
 lineaSalida :: ReadS Salida
@@ -66,9 +66,10 @@ lineaSalida = undefined
 -- Funcion para las descripciones
 lineaDesc :: ReadS String
 lineaDesc d =
-    [ (descripcion, "") | ((), resto) <- clave "DESC" d
-                        , let descripcion = limpiar resto
-                        , not (null descripcion)
+    [ (descripcion, "") 
+    | ((), resto) <- clave "DESC" d
+    , let descripcion = limpiar resto
+    , not (null descripcion)
     ]
 
 -- RECONOCEDORES
@@ -98,3 +99,18 @@ palabra esperado s =
 -- Función auxiliar para limpiar espacios
 limpiar :: String -> String
 limpiar = dropWhileEnd isSpace . dropWhile isSpace
+
+-- Comprueba si un carácter es válido para un identificador
+caracterId :: Char -> Bool
+caracterId c =
+    (c >= 'a' && c <= 'z')
+    || c `elem` "áéíóúñü0123456789_"
+
+-- Reconoce un identificador
+identificador :: ReadS String
+identificador s =
+    [ (nombre, resto)
+    | let entrada = dropWhile isSpace s
+    , let (nombre, resto) = span caracterId entrada
+    , not (null nombre)
+    ]
