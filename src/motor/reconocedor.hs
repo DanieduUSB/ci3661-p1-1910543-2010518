@@ -9,6 +9,8 @@ module Motor.Reconocedor
     , lineaSala
     , lineaDesc
     , lineaSalida
+    , lineaCapacidad
+    , lineaPeso
 ) where
 
 import Motor.Tipos
@@ -42,6 +44,14 @@ lineaMeta m =
     , (meta, resto) <- alternativa metaSinObjeto metaConObjeto r1
     ]
 
+-- Reconoce la capacidad máxima
+lineaCapacidad :: ReadS Int
+lineaCapacidad s =
+    [ (capacidad, resto)
+    | ((), r1) <- clave "CAPACIDAD" s
+    , (capacidad, resto) <- numeroPositivo r1
+    ]
+
 metaSinObjeto :: ReadS Meta
 metaSinObjeto s =
     [ (Llegar (IdSala sala), resto)
@@ -68,6 +78,14 @@ lineaObjeto o =
     [ (IdObjeto objeto, resto)
     | ((), r1) <- clave "OBJETO" o
     , (objeto, resto) <- identificador r1
+    ]
+
+-- Reconoce el peso de un objeto
+lineaPeso :: ReadS Int
+lineaPeso s =
+    [ (peso, resto)
+    | ((), r1) <- clave "PESO" s
+    , (peso, resto) <- numeroPositivo r1
     ]
 
 -- Reconocimiento de bloque de sala
@@ -139,6 +157,14 @@ palabra esperado s =
     [ (token, resto)
     | (token, resto) <- lex s
     , token == esperado
+    ]
+
+-- Reconoce números enteros positivos
+numeroPositivo :: ReadS Int
+numeroPositivo s =
+    [ (numero, resto)
+    | (numero, resto) <- (reads s :: [(Int, String)])
+    , numero > 0
     ]
 
 -- Función auxiliar para limpiar espacios
