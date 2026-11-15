@@ -18,196 +18,6 @@ import Motor.Tipos
 import Data.List (stripPrefix, dropWhileEnd, isPrefixOf)
 import Data.Char (isSpace)
 
--- Reconocimiento de cabecera
-leerCabecera :: ReadS Mundo
-leerCabecera texto =
-    [ (Mundo titulo inicio meta [] [] capacidad, "")
-    | let ls = map limpiar (lines texto)
-
-    -- Campo MUNDO
-    , let mundos = filter (isPrefixOf "MUNDO:") ls
-    , [lm] <- [mundos]
-    , Just titulo <- [reconocerCompleto lineaMundo lm]
-
-    -- Campo INICIO
-    , let inicios = filter (isPrefixOf "INICIO:") ls
-    , [li] <- [inicios]
-    , Just inicio <- [reconocerCompleto lineaInicio li]
-
-    -- Campo META
-    , let metas = filter (isPrefixOf "META:") ls
-    , [lme] <- [metas]
-    , Just meta <- [reconocerCompleto lineaMeta lme]
-
-    -- Campo CAPACIDAD
-    , let capacidades = filter (isPrefixOf "CAPACIDAD:") ls
-    , [lc] <- [capacidades]
-    , Just capacidad <- [reconocerCompleto lineaCapacidad lc]
-
-    -- Verificar que no existan campos adicionales
-    , length ls == 4
-    ]
-
-lineaMundo :: ReadS String
-lineaMundo m =
-    [ (titulo, "")
-    | ((), resto) <- clave "MUNDO" m
-    , let titulo = limpiar resto
-    , not (null titulo)
-    ]
-        
-lineaInicio :: ReadS IdSala
-lineaInicio i =
-    [ (IdSala sala, resto)
-    | ((), r1) <- clave "INICIO" i
-    , (sala, resto) <- identificador r1
-    ]
-
-lineaMeta :: ReadS Meta
-lineaMeta m =
-    [ (meta, resto)
-    | ((), r1) <- clave "META" m
-    , (meta, resto) <- alternativa metaSinObjeto metaConObjeto r1
-    ]
-
--- Reconoce la capacidad máxima
-lineaCapacidad :: ReadS Int
-lineaCapacidad s =
-    [ (capacidad, resto)
-    | ((), r1) <- clave "CAPACIDAD" s
-    , (capacidad, resto) <- numeroPositivo r1
-    ]
-
-metaSinObjeto :: ReadS Meta
-metaSinObjeto s =
-    [ (Llegar (IdSala sala), resto)
-    | (_, r1) <- palabra "llegar" s
-    , (_, r2) <- palabra "a" r1
-    , (sala, resto) <- identificador r2
-    ]
-
-metaConObjeto :: ReadS Meta
-metaConObjeto c =
-    [ (Llevar (IdObjeto objeto) (IdSala sala), resto)
-    | (_, r1) <- palabra "llevar" c
-    , (objeto, r2) <- identificador r1
-    , (_, r3) <- palabra "a" r2
-    , (sala, resto) <- identificador r3
-    ]
-
--- Reconocimiento de bloque de objeto
-leerBloqObj :: ReadS Objeto
-leerBloqObj texto =
-    [ (Objeto objeto descripcion peso, "")
-    | let ls = map limpiar (lines texto)
-
-    -- Primera linea: OBJETO
-    , (primera:resto) <- [ls]
-    , Just objeto <- [reconocerCompleto lineaObjeto primera]
-
-    -- Campo obligatorio: DESC
-    , let descripciones = filter (isPrefixOf "DESC:") resto
-    , [lineaD] <- [descripciones]
-    , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
-
-    -- Campo opcional: PESO
-    , let pesos = filter (isPrefixOf "PESO:") resto
-    , peso <- case pesos of
-        []  -> [1]
-        [p] -> case reconocerCompleto lineaPeso p of
-            Just n  -> [n]
-            Nothing -> []
-        _   -> []
-
-    , length resto == length descripciones + length pesos
-    ]
-
-lineaObjeto :: ReadS IdObjeto
-lineaObjeto o =
-    [ (IdObjeto objeto, resto)
-    | ((), r1) <- clave "OBJETO" o
-    , (objeto, resto) <- identificador r1
-    ]
-
--- Reconoce el peso de un objeto
-lineaPeso :: ReadS Int
-lineaPeso s =
-    [ (peso, resto)
-    | ((), r1) <- clave "PESO" s
-    , (peso, resto) <- numeroPositivo r1
-    ]
-
--- Reconocimiento de bloque de sala
-leerBloqSala :: ReadS Sala
-leerBloqSala texto =
-    [ (Sala sala descripcion salidas objetos, "")
-    | let ls = map limpiar (lines texto)
-
-    -- Primera linea: SALA
-    , (primera:resto) <- [ls]
-    , Just sala <- [reconocerCompleto lineaSala primera]
-
-    -- Campo obligatorio: DESC
-    , let descripciones = filter (isPrefixOf "DESC:") resto
-    , [lineaD] <- [descripciones]
-    , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
-
-    -- Salidas de la sala
-    , let lineasSalida = filter (isPrefixOf "SALIDA:") resto
-    , Just salidas <- [mapM (reconocerCompleto lineaSalida) lineasSalida]
-
-    -- Objetos de la sala
-    , let lineasObjeto = filter (isPrefixOf "OBJETO:") resto
-    , Just objetos <- [mapM (reconocerCompleto lineaObjeto) lineasObjeto]
-
-    -- Verificar que no haya campos adicionales
-    , length resto ==
-        length descripciones + length lineasSalida + length lineasObjeto
-    ]
-
-lineaSala :: ReadS IdSala
-lineaSala s =
-    [ (IdSala sala, resto)
-    | ((), r1) <- clave "SALA" s
-    , (sala, resto) <- identificador r1
-    ]
-
-lineaSalida :: ReadS Salida
-lineaSalida s =
-    [ (salida, resto)
-    | ((), r1) <- clave "SALIDA" s
-    , (salida, resto) <-
-        alternativa salidaConObjeto salidaSinObjeto r1
-    ]
-
-salidaSinObjeto :: ReadS Salida
-salidaSinObjeto s =
-    [ (Salida dir (IdSala destino) Nothing, resto)
-    | (dir, r1) <- direccion s
-    , (_, r2) <- palabra "->" r1
-    , (destino, resto) <- identificador r2
-    ]
-
-salidaConObjeto :: ReadS Salida
-salidaConObjeto s =
-    [ (Salida dir (IdSala destino)
-              (Just (IdObjeto objeto)), resto)
-    | (dir, r1) <- direccion s
-    , (_, r2) <- palabra "->" r1
-    , (destino, r3) <- identificador r2
-    , (_, r4) <- palabra "requiere" r3
-    , (objeto, resto) <- identificador r4
-    ]
-
--- Funcion para las descripciones
-lineaDesc :: ReadS String
-lineaDesc d =
-    [ (descripcion, "") 
-    | ((), resto) <- clave "DESC" d
-    , let descripcion = limpiar resto
-    , not (null descripcion)
-    ]
-
 -- RECONOCEDORES
 
 -- Reconoce un texto literal
@@ -287,3 +97,197 @@ reconocerCompleto reconocedor entrada =
                 , all isSpace resto] of
         [valor] -> Just valor
         _       -> Nothing
+
+-- LECTURA POR BLOQUES
+
+-- Reconocimiento de cabecera
+leerCabecera :: ReadS Mundo
+leerCabecera texto =
+    [ (Mundo titulo inicio meta [] [] capacidad, "")
+    | let ls = map limpiar (lines texto)
+
+    -- Campo MUNDO
+    , let mundos = filter (isPrefixOf "MUNDO:") ls
+    , [lm] <- [mundos]
+    , Just titulo <- [reconocerCompleto lineaMundo lm]
+
+    -- Campo INICIO
+    , let inicios = filter (isPrefixOf "INICIO:") ls
+    , [li] <- [inicios]
+    , Just inicio <- [reconocerCompleto lineaInicio li]
+
+    -- Campo META
+    , let metas = filter (isPrefixOf "META:") ls
+    , [lme] <- [metas]
+    , Just meta <- [reconocerCompleto lineaMeta lme]
+
+    -- Campo CAPACIDAD
+    , let capacidades = filter (isPrefixOf "CAPACIDAD:") ls
+    , [lc] <- [capacidades]
+    , Just capacidad <- [reconocerCompleto lineaCapacidad lc]
+
+    -- Verificar que no existan campos adicionales
+    , length ls == 4
+    ]
+
+-- Reconocimiento de bloque de objeto
+leerBloqObj :: ReadS Objeto
+leerBloqObj texto =
+    [ (Objeto objeto descripcion peso, "")
+    | let ls = map limpiar (lines texto)
+
+    -- Primera linea: OBJETO
+    , (primera:resto) <- [ls]
+    , Just objeto <- [reconocerCompleto lineaObjeto primera]
+
+    -- Campo obligatorio: DESC
+    , let descripciones = filter (isPrefixOf "DESC:") resto
+    , [lineaD] <- [descripciones]
+    , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
+
+    -- Campo opcional: PESO
+    , let pesos = filter (isPrefixOf "PESO:") resto
+    , peso <- case pesos of
+        []  -> [1]
+        [p] -> case reconocerCompleto lineaPeso p of
+            Just n  -> [n]
+            Nothing -> []
+        _   -> []
+
+    , length resto == length descripciones + length pesos
+    ]
+
+-- Reconocimiento de bloque de sala
+leerBloqSala :: ReadS Sala
+leerBloqSala texto =
+    [ (Sala sala descripcion salidas objetos, "")
+    | let ls = map limpiar (lines texto)
+
+    -- Primera linea: SALA
+    , (primera:resto) <- [ls]
+    , Just sala <- [reconocerCompleto lineaSala primera]
+
+    -- Campo obligatorio: DESC
+    , let descripciones = filter (isPrefixOf "DESC:") resto
+    , [lineaD] <- [descripciones]
+    , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
+
+    -- Salidas de la sala
+    , let lineasSalida = filter (isPrefixOf "SALIDA:") resto
+    , Just salidas <- [mapM (reconocerCompleto lineaSalida) lineasSalida]
+
+    -- Objetos de la sala
+    , let lineasObjeto = filter (isPrefixOf "OBJETO:") resto
+    , Just objetos <- [mapM (reconocerCompleto lineaObjeto) lineasObjeto]
+
+    -- Verificar que no haya campos adicionales
+    , length resto ==
+        length descripciones + length lineasSalida + length lineasObjeto
+    ]
+
+-- LECTURA POR LINEAS
+
+lineaMundo :: ReadS String
+lineaMundo m =
+    [ (titulo, "")
+    | ((), resto) <- clave "MUNDO" m
+    , let titulo = limpiar resto
+    , not (null titulo)
+    ]
+        
+lineaInicio :: ReadS IdSala
+lineaInicio i =
+    [ (IdSala sala, resto)
+    | ((), r1) <- clave "INICIO" i
+    , (sala, resto) <- identificador r1
+    ]
+
+lineaMeta :: ReadS Meta
+lineaMeta m =
+    [ (meta, resto)
+    | ((), r1) <- clave "META" m
+    , (meta, resto) <- alternativa metaSinObjeto metaConObjeto r1
+    ]
+
+-- Reconoce la capacidad máxima
+lineaCapacidad :: ReadS Int
+lineaCapacidad s =
+    [ (capacidad, resto)
+    | ((), r1) <- clave "CAPACIDAD" s
+    , (capacidad, resto) <- numeroPositivo r1
+    ]
+
+metaSinObjeto :: ReadS Meta
+metaSinObjeto s =
+    [ (Llegar (IdSala sala), resto)
+    | (_, r1) <- palabra "llegar" s
+    , (_, r2) <- palabra "a" r1
+    , (sala, resto) <- identificador r2
+    ]
+
+metaConObjeto :: ReadS Meta
+metaConObjeto c =
+    [ (Llevar (IdObjeto objeto) (IdSala sala), resto)
+    | (_, r1) <- palabra "llevar" c
+    , (objeto, r2) <- identificador r1
+    , (_, r3) <- palabra "a" r2
+    , (sala, resto) <- identificador r3
+    ]
+
+lineaObjeto :: ReadS IdObjeto
+lineaObjeto o =
+    [ (IdObjeto objeto, resto)
+    | ((), r1) <- clave "OBJETO" o
+    , (objeto, resto) <- identificador r1
+    ]
+
+-- Reconoce el peso de un objeto
+lineaPeso :: ReadS Int
+lineaPeso s =
+    [ (peso, resto)
+    | ((), r1) <- clave "PESO" s
+    , (peso, resto) <- numeroPositivo r1
+    ]
+
+lineaSala :: ReadS IdSala
+lineaSala s =
+    [ (IdSala sala, resto)
+    | ((), r1) <- clave "SALA" s
+    , (sala, resto) <- identificador r1
+    ]
+
+lineaSalida :: ReadS Salida
+lineaSalida s =
+    [ (salida, resto)
+    | ((), r1) <- clave "SALIDA" s
+    , (salida, resto) <-
+        alternativa salidaConObjeto salidaSinObjeto r1
+    ]
+
+salidaSinObjeto :: ReadS Salida
+salidaSinObjeto s =
+    [ (Salida dir (IdSala destino) Nothing, resto)
+    | (dir, r1) <- direccion s
+    , (_, r2) <- palabra "->" r1
+    , (destino, resto) <- identificador r2
+    ]
+
+salidaConObjeto :: ReadS Salida
+salidaConObjeto s =
+    [ (Salida dir (IdSala destino)
+              (Just (IdObjeto objeto)), resto)
+    | (dir, r1) <- direccion s
+    , (_, r2) <- palabra "->" r1
+    , (destino, r3) <- identificador r2
+    , (_, r4) <- palabra "requiere" r3
+    , (objeto, resto) <- identificador r4
+    ]
+
+-- Funcion para las descripciones
+lineaDesc :: ReadS String
+lineaDesc d =
+    [ (descripcion, "") 
+    | ((), resto) <- clave "DESC" d
+    , let descripcion = limpiar resto
+    , not (null descripcion)
+    ]
