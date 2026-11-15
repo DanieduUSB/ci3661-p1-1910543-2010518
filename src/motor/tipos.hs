@@ -83,14 +83,25 @@ data Comando = Comando
 -- Errores
 
 data ErrorMundo
-    = ErrorSintactico Int ErrorV1
-    | ErrorSemantico String
+    = ErrorSintactico               Int ErrorV1
+    | SalaDuplicada                 IdSala -- V2
+    | ObjetoDuplicado               IdObjeto -- V2
+    | SalaDestinoInexistente        IdSala IdSala -- V3
+    | ObjetoRequeridoInexistente    IdSala IdObjeto -- V4
+    | DireccionDuplicada            IdSala Direccion -- V5
+    | ObjetoInexistenteEnSala       IdSala IdObjeto -- V6
+    | ObjetoRepetido                IdObjeto -- V7
+    | SalaInicioInexistente         IdSala -- V8
+    | SalaMetaInexistente           IdSala -- V8
+    | ObjetoMetaInexistente         IdObjeto -- V8
+    | SalaInalcanzable              IdSala -- V9
+    | ObjetoNecesarioSinUbicacion   IdObjeto -- V10
     deriving (Eq)
 
 instance Show ErrorMundo where
     show (ErrorSintactico linea errorSyn) =
         "Error: línea " ++ show linea ++ ": " ++ mensajeErrorV1 errorSyn
-    show (ErrorSemantico s) = s
+    show _ = "Error: "
 
 data ErrorV1
     = ClaveDesconocida String
