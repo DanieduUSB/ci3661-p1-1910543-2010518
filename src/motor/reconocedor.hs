@@ -20,7 +20,33 @@ import Data.Char (isSpace)
 
 -- Reconocimiento de cabecera
 leerCabecera :: ReadS Mundo
-leerCabecera = undefined
+leerCabecera texto =
+    [ (Mundo titulo inicio meta [] [] capacidad, "")
+    | let ls = map limpiar (lines texto)
+
+    -- Campo MUNDO
+    , let mundos = filter (isPrefixOf "MUNDO:") ls
+    , [lm] <- [mundos]
+    , Just titulo <- [reconocerCompleto lineaMundo lm]
+
+    -- Campo INICIO
+    , let inicios = filter (isPrefixOf "INICIO:") ls
+    , [li] <- [inicios]
+    , Just inicio <- [reconocerCompleto lineaInicio li]
+
+    -- Campo META
+    , let metas = filter (isPrefixOf "META:") ls
+    , [lme] <- [metas]
+    , Just meta <- [reconocerCompleto lineaMeta lme]
+
+    -- Campo CAPACIDAD
+    , let capacidades = filter (isPrefixOf "CAPACIDAD:") ls
+    , [lc] <- [capacidades]
+    , Just capacidad <- [reconocerCompleto lineaCapacidad lc]
+
+    -- Verificar que no existan campos adicionales
+    , length ls == 4
+    ]
 
 lineaMundo :: ReadS String
 lineaMundo m =
