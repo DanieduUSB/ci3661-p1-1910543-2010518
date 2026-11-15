@@ -1,6 +1,7 @@
 module Motor.Tipos
     ( Mundo(..)
     , Sala (..)
+    , Salida(..)
     , Objeto(..)
     , Direccion(..)
     , Meta(..)
