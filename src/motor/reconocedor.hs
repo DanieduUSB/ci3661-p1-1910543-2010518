@@ -1,6 +1,6 @@
 module Motor.Reconocedor
     ( leerCabecera
-    , lineaMun
+    , lineaMundo
     , lineaInicio
     , lineaMeta
     , leerBloqObj
@@ -9,44 +9,60 @@ module Motor.Reconocedor
     , lineaSala
     , lineaDesc
     , lineaSalida
-    , lineaObjSala
 ) where
 
 import Motor.Tipos
 
 -- Reconocimiento de cabecera
-
-leerCabecera :: ReadS String
+leerCabecera :: ReadS Mundo
 leerCabecera = undefined
 
-lineaMun :: ReadS String
-lineaMun = undefined
+lineaMundo :: ReadS String
+lineaMundo m =
+    [ (titulo, "")  | ("MUNDO", r1) <- lex m
+                    , (":", r2) <- lex r1
+                    , let titulo = dropWhile (== ' ') r2
+    ]
         
 lineaInicio :: ReadS IdSala
-lineaInicio x = undefined
+lineaInicio i =
+    [ (IdSala sala, "")    | ("INICIO", r1) <- lex i
+                    , (":", r2) <- lex r1
+                    , let sala = dropWhile (== ' ') r2
+    ]
 
-lineaMeta :: ReadS String
+lineaMeta :: ReadS Meta
 lineaMeta = undefined
 
 -- Reconocimiento de bloque de objeto
-
-leerBloqObj :: ReadS String
+leerBloqObj :: ReadS Objeto
 leerBloqObj = undefined
 
 lineaObjeto :: ReadS IdObjeto
-lineaObjeto = undefined
+lineaObjeto o = 
+    [ (IdObjeto objeto, "")  | ("OBJETO", r1) <- lex o
+                    , (":", r2) <- lex r1
+                    , let objeto = dropWhile (== ' ') r2
+    ]  
 
 -- Reconocimiento de bloque de sala
-
-leerBLoqSala :: ReadS String
+leerBLoqSala :: ReadS Sala
 leerBLoqSala = undefined
 
 lineaSala :: ReadS IdSala
-lineaSala = undefined
+lineaSala s = 
+    [ (IdSala sala, "")    | ("SALA", r1) <- lex s
+                    , (":", r2) <- lex r1
+                    , let sala = dropWhile (== ' ') r2
+    ]
 
-lineaSalida :: ReadS String
+lineaSalida :: ReadS Salida
 lineaSalida = undefined
 
 -- Funcion para las descripciones
 lineaDesc :: ReadS String
-lineaDesc = undefined
+lineaDesc d = 
+    [ (descripcion, "") | ("DESC", r1) <- lex d
+                        , (":", r2) <- lex r1
+                        , let descripcion = dropWhile (== ' ') r2
+    ]
