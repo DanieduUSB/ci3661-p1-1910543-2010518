@@ -9,9 +9,13 @@ module Motor.Reconocedor
     , lineaSala
     , lineaDesc
     , lineaSalida
+    , clave
 ) where
 
 import Motor.Tipos
+
+import Data.List (stripPrefix, dropWhileEnd)
+import Data.Char (isSpace)
 
 -- Reconocimiento de cabecera
 leerCabecera :: ReadS Mundo
@@ -65,4 +69,28 @@ lineaDesc d =
     [ (descripcion, "") | ("DESC", r1) <- lex d
                         , (":", r2) <- lex r1
                         , let descripcion = dropWhile (== ' ') r2
+    ]
+
+-- RECONOCEDORES
+
+-- Reconoce un texto literal
+literal :: String -> ReadS String
+literal esperado s =
+    [ (esperado, resto)
+    | Just resto <- [stripPrefix esperado s]
+    ]
+
+-- Reconoce una clave seguida de :
+clave :: String -> ReadS ()
+clave nombre s =
+    [ ((), resto)
+    | (_, resto) <- literal (nombre ++ ":") s
+    ]
+
+-- Reconoce una palabra o símbolo mediante lex
+palabra :: String -> ReadS String
+palabra esperado s =
+    [ (token, resto)
+    | (token, resto) <- lex s
+    , token == esperado
     ]
