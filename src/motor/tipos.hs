@@ -12,6 +12,8 @@ module Motor.Tipos
     , IdSala(..)
     ) where
 
+import qualified Data.Map.Strict as Map
+
 -- Identificador
 
 newtype IdObjeto = IdObjeto String
@@ -30,8 +32,8 @@ data Mundo = Mundo
     { mundoTitulo  :: String
     , mundoInicio  :: IdSala
     , mundoMeta    :: Meta
-    , mundoSalas   :: [Sala]
-    , mundoObjetos :: [Objeto]
+    , mundoSalas   :: Map.Map IdSala [Sala]
+    , mundoObjetos :: Map.Map IdObjeto [Objeto]
     }
 
 -- Sala
@@ -39,7 +41,7 @@ data Mundo = Mundo
 data Sala = Sala
     { salaId        :: IdSala
     , salaDesc      :: String
-    , salaSalidas   :: [Salida]
+    , salaSalidas   :: Map.Map Direccion [Salida]
     , salaObjetos   :: [IdObjeto]
     } deriving (Eq, Show)
 
