@@ -35,7 +35,7 @@ data Mundo = Mundo
     , mundoMeta    :: Meta
     , mundoSalas   :: Map.Map IdSala [Sala]
     , mundoObjetos :: Map.Map IdObjeto [Objeto]
-    } deriving (Eq)
+    } deriving (Eq, Show)
 
 -- Sala
 
@@ -78,7 +78,7 @@ data Direccion
 data Meta
     = Llegar IdSala
     | Llevar IdObjeto IdSala
-    deriving (Eq)
+    deriving (Eq, Show)
 
 -- Estado
 
@@ -92,7 +92,17 @@ data Estado = Estado
 
 -- Comando
 
-data Comando = Comando
+data Comando
+    = Ir Direccion
+    | Mirar
+    | Tomar IdObjeto
+    | Soltar IdObjeto
+    | Examinar IdObjeto
+    | Inventario
+    | Guardar FilePath
+    | Cargar FilePath
+    | Ayuda
+    | Salir
 
 -- Errores
 
