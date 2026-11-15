@@ -5,7 +5,7 @@ module Motor.Reconocedor
     , lineaMeta
     , leerBloqObj
     , lineaObjeto
-    , leerBLoqSala
+    , leerBloqSala
     , lineaSala
     , lineaDesc
     , lineaSalida
@@ -75,13 +75,16 @@ leerBloqObj texto =
     [ (Objeto objeto descripcion peso, "")
     | let ls = map limpiar (lines texto)
 
+    -- Primera linea: OBJETO
     , (primera:resto) <- [ls]
     , Just objeto <- [reconocerCompleto lineaObjeto primera]
 
+    -- Campo obligatorio: DESC
     , let descripciones = filter (isPrefixOf "DESC:") resto
     , [lineaD] <- [descripciones]
     , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
 
+    -- Campo opcional: PESO
     , let pesos = filter (isPrefixOf "PESO:") resto
     , peso <- case pesos of
         []  -> [1]
@@ -109,8 +112,32 @@ lineaPeso s =
     ]
 
 -- Reconocimiento de bloque de sala
-leerBLoqSala :: ReadS Sala
-leerBLoqSala = undefined
+leerBloqSala :: ReadS Sala
+leerBloqSala texto =
+    [ (Sala sala descripcion salidas objetos, "")
+    | let ls = map limpiar (lines texto)
+
+    -- Primera linea: SALA
+    , (primera:resto) <- [ls]
+    , Just sala <- [reconocerCompleto lineaSala primera]
+
+    -- Campo obligatorio: DESC
+    , let descripciones = filter (isPrefixOf "DESC:") resto
+    , [lineaD] <- [descripciones]
+    , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
+
+    -- Salidas de la sala
+    , let lineasSalida = filter (isPrefixOf "SALIDA:") resto
+    , Just salidas <- [mapM (reconocerCompleto lineaSalida) lineasSalida]
+
+    -- Objetos de la sala
+    , let lineasObjeto = filter (isPrefixOf "OBJETO:") resto
+    , Just objetos <- [mapM (reconocerCompleto lineaObjeto) lineasObjeto]
+
+    -- Verificar que no haya campos adicionales
+    , length resto ==
+        length descripciones + length lineasSalida + length lineasObjeto
+    ]
 
 lineaSala :: ReadS IdSala
 lineaSala s =
