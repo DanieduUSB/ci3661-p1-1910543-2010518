@@ -32,7 +32,24 @@ ejecutar (Tomar idObj) estado = undefined
 
 ejecutar (Soltar idObj) estado = undefined
 
-ejecutar (Examinar idObj) estado = undefined
+ejecutar (Examinar idObj) estado
+    -- Caso: El objeto no está en el inventario ni en la sala
+    | not (Set.member idObj (inventario estado)) &&
+      not (Set.member idObj objetosSala)
+        = (["No tienes acceso al objeto " ++ show idObj], estado)
+    | otherwise
+        = (strLista, estado)
+    where
+        objetosSala = Map.findWithDefault Set.empty
+            (salaActual estado)
+            (objetosPorSala estado)
+        -- Lista global de objetos
+        objs        = mundoObjetos (estadoMundo estado)
+        strLista    = case Map.lookup idObj objs of
+            -- Caso: El objeto existe
+            Just [obj]  -> [show idObj ++ ":", objetoDesc obj]
+            -- Caso: El objeto no existe (No fue declarado nunca)
+            _           -> ["No existe el objeto " ++ show idObj]
 
 ejecutar Inventario estado =
     ( "Inventario:" : contenido, estado )
