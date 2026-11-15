@@ -26,7 +26,32 @@ ejecutar :: Comando -> Estado -> ([String], Estado)
 
 ejecutar (Ir dir) estado = undefined
 
-ejecutar Mirar estado = undefined
+ejecutar Mirar estado =
+    (   [ "Sala actual: " ++ show (salaActual estado)
+        , desc
+        , ""
+        , "Objetos:"
+        ]
+        ++ case objs of
+            []  -> ["(Sin objetos)"]
+            _   -> objs
+        ++ [ ""
+        , "Salidas:"
+        ]
+        ++ case salidas of
+            []  -> ["(Sin salidas)"]
+            _   -> salidas
+    , estado
+    )
+    where
+        salas = mundoSalas (estadoMundo estado)
+        -- !! no falla ya que la sala actual debe estar en la lista de salas. Esta comprobación
+        -- se hace en Motor.Mundo
+        sala = (Map.findWithDefault [] (salaActual estado) salas) !! 0
+        desc = salaDesc sala
+        objs = map (\(IdObjeto objId) -> objId) (salaObjetos sala)
+        salidas = map (\s -> show s) (concat (Map.elems (salaSalidas sala)))
+
 
 ejecutar (Tomar idObj) estado = undefined
 
