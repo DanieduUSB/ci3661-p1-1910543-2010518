@@ -36,7 +36,28 @@ lineaInicio i =
     ]
 
 lineaMeta :: ReadS Meta
-lineaMeta = undefined
+lineaMeta m =
+    [ (meta, resto)
+    | ((), r1) <- clave "META" m
+    , (meta, resto) <- alternativa metaSinObjeto metaConObjeto r1
+    ]
+
+metaSinObjeto :: ReadS Meta
+metaSinObjeto s =
+    [ (Llegar (IdSala sala), resto)
+    | (_, r1) <- palabra "llegar" s
+    , (_, r2) <- palabra "a" r1
+    , (sala, resto) <- identificador r2
+    ]
+
+metaConObjeto :: ReadS Meta
+metaConObjeto c =
+    [ (Llevar (IdObjeto objeto) (IdSala sala), resto)
+    | (_, r1) <- palabra "llevar" c
+    , (objeto, r2) <- identificador r1
+    , (_, r3) <- palabra "a" r2
+    , (sala, resto) <- identificador r3
+    ]
 
 -- Reconocimiento de bloque de objeto
 leerBloqObj :: ReadS Objeto
@@ -114,3 +135,7 @@ identificador s =
     , let (nombre, resto) = span caracterId entrada
     , not (null nombre)
     ]
+
+-- Función auxiliar que combina dos ReadS
+alternativa :: ReadS a -> ReadS a -> ReadS a
+alternativa p q s = p s ++ q s
