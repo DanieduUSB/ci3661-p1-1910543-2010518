@@ -21,5 +21,25 @@ estadoInicial m = Estado
     , juegoTerminado    = False
     }
 
+-- Para cada comando existente realiza una acción distinta
 ejecutar :: Comando -> Estado -> ([String], Estado)
-ejecutar = undefined
+
+ejecutar (Ir dir) estado = undefined
+
+ejecutar Mirar estado = undefined
+
+ejecutar (Tomar idObj) estado = undefined
+
+ejecutar (Soltar idObj) estado = undefined
+
+ejecutar (Examinar idObj) estado = undefined
+
+ejecutar Inventario estado = undefined
+
+ejecutar (Guardar path) estado = undefined
+
+ejecutar (Cargar path) estado = undefined
+
+ejecutar Ayuda estado = undefined
+
+ejecutar Salir estado = undefined
