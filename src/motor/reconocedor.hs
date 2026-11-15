@@ -82,7 +82,31 @@ lineaSala s =
     ]
 
 lineaSalida :: ReadS Salida
-lineaSalida = undefined
+lineaSalida s =
+    [ (salida, resto)
+    | ((), r1) <- clave "SALIDA" s
+    , (salida, resto) <-
+        alternativa salidaConObjeto salidaSinObjeto r1
+    ]
+
+salidaSinObjeto :: ReadS Salida
+salidaSinObjeto s =
+    [ (Salida dir (IdSala destino) Nothing, resto)
+    | (dir, r1) <- direccion s
+    , (_, r2) <- palabra "->" r1
+    , (destino, resto) <- identificador r2
+    ]
+
+salidaConObjeto :: ReadS Salida
+salidaConObjeto s =
+    [ (Salida dir (IdSala destino)
+              (Just (IdObjeto objeto)), resto)
+    | (dir, r1) <- direccion s
+    , (_, r2) <- palabra "->" r1
+    , (destino, r3) <- identificador r2
+    , (_, r4) <- palabra "requiere" r3
+    , (objeto, resto) <- identificador r4
+    ]
 
 -- Funcion para las descripciones
 lineaDesc :: ReadS String
@@ -135,6 +159,23 @@ identificador s =
     , let (nombre, resto) = span caracterId entrada
     , not (null nombre)
     ]
+
+-- Reconoce una dirección
+direccion :: ReadS Direccion
+direccion s =
+    [ (dir, resto)
+    | (nombre, dir) <- direcciones
+    , (_, resto) <- palabra nombre s
+    ]
+    where
+        direcciones =
+            [ ("norte", Norte)
+            , ("sur", Sur)
+            , ("este", Este)
+            , ("oeste", Oeste)
+            , ("arriba", Arriba)
+            , ("abajo", Abajo)
+            ]
 
 -- Función auxiliar que combina dos ReadS
 alternativa :: ReadS a -> ReadS a -> ReadS a
