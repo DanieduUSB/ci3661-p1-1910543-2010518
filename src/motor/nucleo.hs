@@ -26,14 +26,29 @@ ejecutar :: Comando -> Estado -> ([String], Estado)
 
 ejecutar (Ir dir) estado =
     case salida of
+        -- Caso: No hay una salida en esa dirección
         []  -> (["No hay salida en dirección " ++ show dir], estado)
-        _   -> ([""], estado)
+        -- Caso: Hay una salida en esa dirección, hay que verificar si hay condición de victoria o no
+        h:_
+            | verificarVictoria meta (salidaDestino h) inv
+                -> (["*** ¡Has ganado! ***"]
+                    , estado
+                        { salaActual        = salidaDestino h
+                        , juegoTerminado    = True
+                        }
+                    )
+            | otherwise
+                -> (["Avanzaste a la sala " ++ show (salidaDestino h)]
+                    , estado { salaActual = salidaDestino h }
+                    )
     where
         salas = mundoSalas (estadoMundo estado)
         -- !! no falla ya que la sala actual debe estar en la lista de salas. Esta comprobación
         -- se hace en Motor.Mundo
         sala = (Map.findWithDefault [] (salaActual estado) salas) !! 0
         salida = Map.findWithDefault [] dir (salaSalidas sala)
+        meta = mundoMeta (estadoMundo estado)
+        inv = inventario estado
 
 ejecutar Mirar estado =
     (   [ "Sala actual: " ++ show (salaActual estado)
