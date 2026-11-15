@@ -23,11 +23,11 @@ newtype IdSala = IdSala String
 -- Mundo
 
 data Mundo = Mundo
-    { titulo  :: String
-    , inicio  :: IdSala
-    , meta    :: Meta
-    , salas   :: [Sala]
-    , objetos :: [Objeto]
+    { mundoTitulo  :: String
+    , mundoInicio  :: IdSala
+    , mundoMeta    :: Meta
+    , mundoSalas   :: [Sala]
+    , mundoObjetos :: [Objeto]
     }
 
 -- Sala
