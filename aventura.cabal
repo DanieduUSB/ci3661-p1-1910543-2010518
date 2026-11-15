@@ -39,6 +39,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 executable aventura-exe
@@ -51,6 +52,7 @@ executable aventura-exe
   build-depends:
       aventura
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
 
 test-suite aventura-test
@@ -64,4 +66,5 @@ test-suite aventura-test
   build-depends:
       aventura
     , base >=4.7 && <5
+    , containers
   default-language: Haskell2010
