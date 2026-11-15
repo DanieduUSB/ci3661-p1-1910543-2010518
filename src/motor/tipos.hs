@@ -89,7 +89,7 @@ data Comando = Comando
 -- Errores
 
 data ErrorMundo
-    = ErrorSintactico   Int ErrorV1 -- V1
+    = V1    Int ErrorV1         -- Errores sintácticos
     | V2a   IdSala              -- Dos salas mismo id
     | V2b   IdObjeto            -- Dos objetos mismo id
     | V3    IdSala IdSala       -- Salida a sala no existente
@@ -105,7 +105,7 @@ data ErrorMundo
     deriving (Eq)
 
 instance Show ErrorMundo where
-    show (ErrorSintactico linea errorSyn)
+    show (V1 linea errorSyn)
         = "Error: V1 - línea " ++ show linea ++ ": " ++ mensajeErrorV1 errorSyn
     show (V2a sala)
         = "Error: V2 - Sala duplicada: " ++ show sala
