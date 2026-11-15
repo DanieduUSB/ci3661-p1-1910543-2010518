@@ -13,6 +13,7 @@ module Motor.Tipos
     ) where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 
 -- Identificador
 
@@ -34,7 +35,7 @@ data Mundo = Mundo
     , mundoMeta    :: Meta
     , mundoSalas   :: Map.Map IdSala [Sala]
     , mundoObjetos :: Map.Map IdObjeto [Objeto]
-    }
+    } deriving (Eq)
 
 -- Sala
 
@@ -77,10 +78,17 @@ data Direccion
 data Meta
     = Llegar IdSala
     | Llevar IdObjeto IdSala
+    deriving (Eq)
 
 -- Estado
 
 data Estado = Estado
+    { estadoMundo       :: Mundo
+    , salaActual        :: IdSala
+    , inventario        :: Set.Set IdObjeto
+    , objetosPorSala    :: Map.Map IdSala (Set.Set IdObjeto)
+    , juegoTerminado    :: Bool
+    } deriving (Eq)
 
 -- Comando
 
