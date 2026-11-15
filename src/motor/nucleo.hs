@@ -131,3 +131,17 @@ ayudaComando (Guardar _)    = "guardar <archivo>: Guardar la partida en el archi
 ayudaComando (Cargar _)     = "cargar <archivo>: Cargar una partida del archivo indicado"
 ayudaComando Ayuda          = "ayuda: Mostrar los comandos disponibles"
 ayudaComando Salir          = "salidar: Terminar el juego"
+
+-- Función auxiliar verificarVictoria
+-- Recibe la meta, la sala a la que se puede avanzar, y el inventario.
+-- Retorna True si la sala a avanzar es la de victoria y se cumplen los requisitos para ganar,
+-- Retorna False en caso contrario
+verificarVictoria :: Meta -> IdSala -> Set.Set IdObjeto -> Bool
+verificarVictoria (Llegar idSala) sala _
+    | idSala == sala    = True
+    | otherwise         = False
+verificarVictoria (Llevar idObj idSala) sala inv
+    | idSala == sala && Set.member idObj inv
+        = True
+    | otherwise
+        = False
