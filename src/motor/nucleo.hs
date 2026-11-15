@@ -24,7 +24,16 @@ estadoInicial m = Estado
 -- Para cada comando existente realiza una acción distinta
 ejecutar :: Comando -> Estado -> ([String], Estado)
 
-ejecutar (Ir dir) estado = undefined
+ejecutar (Ir dir) estado =
+    case salida of
+        []  -> (["No hay salida en dirección " ++ show dir], estado)
+        _   -> ([""], estado)
+    where
+        salas = mundoSalas (estadoMundo estado)
+        -- !! no falla ya que la sala actual debe estar en la lista de salas. Esta comprobación
+        -- se hace en Motor.Mundo
+        sala = (Map.findWithDefault [] (salaActual estado) salas) !! 0
+        salida = Map.findWithDefault [] dir (salaSalidas sala)
 
 ejecutar Mirar estado =
     (   [ "Sala actual: " ++ show (salaActual estado)
