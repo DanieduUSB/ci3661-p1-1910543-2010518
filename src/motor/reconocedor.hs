@@ -1,36 +1,52 @@
 module Motor.Reconocedor
-    ( leerMun
-    , leerInicio
-    , leerMeta
-    , leerObjeto
-    , leerDesc
-    , leerSalida
-    , leerObjSala
+    ( leerCabecera
+    , lineaMun
+    , lineaInicio
+    , lineaMeta
+    , leerBloqObj
+    , lineaObjeto
+    , leerBLoqSala
+    , lineaSala
+    , lineaDesc
+    , lineaSalida
+    , lineaObjSala
 ) where
 
-import Data.List(stripPrefix)
 import Motor.Tipos
 
-leerMun :: String -> Either String String
-leerMun m =
-    case stripPrefix "MUNDO: " m of
-        Nothing -> Left "Formato inválido"
-        Just titulo -> Right titulo
+-- Reconocimiento de cabecera
+
+leerCabecera :: ReadS String
+leerCabecera = undefined
+
+lineaMun :: ReadS String
+lineaMun = undefined
         
-leerInicio :: String -> Either String String
-leerInicio = undefined
+lineaInicio :: ReadS IdSala
+lineaInicio x = undefined
 
-leerMeta :: String -> Either String String
-leerMeta = undefined
+lineaMeta :: ReadS String
+lineaMeta = undefined
 
-leerObjeto :: String -> Either String String
-leerObjeto = undefined
+-- Reconocimiento de bloque de objeto
 
-leerDesc :: String -> Either String String
-leerDesc = undefined
+leerBloqObj :: ReadS String
+leerBloqObj = undefined
 
-leerSalida:: String -> Either String String
-leerSalida = undefined
+lineaObjeto :: ReadS IdObjeto
+lineaObjeto = undefined
 
-leerObjSala :: String -> Either String String
-leerObjSala = undefined
+-- Reconocimiento de bloque de sala
+
+leerBLoqSala :: ReadS String
+leerBLoqSala = undefined
+
+lineaSala :: ReadS IdSala
+lineaSala = undefined
+
+lineaSalida :: ReadS String
+lineaSalida = undefined
+
+-- Funcion para las descripciones
+lineaDesc :: ReadS String
+lineaDesc = undefined
