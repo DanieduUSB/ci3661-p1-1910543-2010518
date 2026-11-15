@@ -15,7 +15,7 @@ module Motor.Reconocedor
 
 import Motor.Tipos
 
-import Data.List (stripPrefix, dropWhileEnd)
+import Data.List (stripPrefix, dropWhileEnd, isPrefixOf)
 import Data.Char (isSpace)
 
 -- Reconocimiento de cabecera
@@ -71,7 +71,27 @@ metaConObjeto c =
 
 -- Reconocimiento de bloque de objeto
 leerBloqObj :: ReadS Objeto
-leerBloqObj = undefined
+leerBloqObj texto =
+    [ (Objeto objeto descripcion peso, "")
+    | let ls = map limpiar (lines texto)
+
+    , (primera:resto) <- [ls]
+    , Just objeto <- [reconocerCompleto lineaObjeto primera]
+
+    , let descripciones = filter (isPrefixOf "DESC:") resto
+    , [lineaD] <- [descripciones]
+    , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
+
+    , let pesos = filter (isPrefixOf "PESO:") resto
+    , peso <- case pesos of
+        []  -> [1]
+        [p] -> case reconocerCompleto lineaPeso p of
+            Just n  -> [n]
+            Nothing -> []
+        _   -> []
+
+    , length resto == length descripciones + length pesos
+    ]
 
 lineaObjeto :: ReadS IdObjeto
 lineaObjeto o =
@@ -206,3 +226,11 @@ direccion s =
 -- Función auxiliar que combina dos ReadS
 alternativa :: ReadS a -> ReadS a -> ReadS a
 alternativa p q s = p s ++ q s
+
+-- Comprueba que el reconocimiento consumió toda la entrada
+reconocerCompleto :: ReadS a -> String -> Maybe a
+reconocerCompleto reconocedor entrada =
+    case [valor | (valor, resto) <- reconocedor entrada
+                , all isSpace resto] of
+        [valor] -> Just valor
+        _       -> Nothing
