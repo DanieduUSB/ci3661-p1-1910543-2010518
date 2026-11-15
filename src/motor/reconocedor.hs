@@ -65,10 +65,10 @@ lineaSalida = undefined
 
 -- Funcion para las descripciones
 lineaDesc :: ReadS String
-lineaDesc d = 
-    [ (descripcion, "") | ("DESC", r1) <- lex d
-                        , (":", r2) <- lex r1
-                        , let descripcion = dropWhile (== ' ') r2
+lineaDesc d =
+    [ (descripcion, "") | ((), resto) <- clave "DESC" d
+                        , let descripcion = limpiar resto
+                        , not (null descripcion)
     ]
 
 -- RECONOCEDORES
@@ -94,3 +94,7 @@ palabra esperado s =
     | (token, resto) <- lex s
     , token == esperado
     ]
+
+-- Función auxiliar para limpiar espacios
+limpiar :: String -> String
+limpiar = dropWhileEnd isSpace . dropWhile isSpace
