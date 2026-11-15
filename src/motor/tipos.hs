@@ -7,9 +7,9 @@ module Motor.Tipos
     , Estado(..)
     , Comando(..)
     , ErrorMundo(..)
-    , ErrorSyntax(..)
-    , ErrorSintactico
-    , reportarErrorSyntax
+    , reportarErrorV1
+    , IdObjeto(..)
+    , IdSala(..)
     ) where
 
 -- Identificador
@@ -23,9 +23,11 @@ newtype IdSala = IdSala String
 -- Mundo
 
 data Mundo = Mundo
-    { titulo :: String
-    , inicio :: IdSala
-    , meta   :: Meta
+    { titulo  :: String
+    , inicio  :: IdSala
+    , meta    :: Meta
+    , salas   :: [Sala]
+    , objetos :: [Objeto]
     }
 
 -- Sala
@@ -80,16 +82,17 @@ data Comando = Comando
 
 -- Errores
 
-data ErrorMundo = ErrorMundo
-
-data ErrorSintactico = ErrorSintactico Int ErrorSyntax
+data ErrorMundo
+    = ErrorSintactico Int ErrorV1
+    | ErrorSemantico String
     deriving (Eq)
 
-instance Show ErrorSintactico where
+instance Show ErrorMundo where
     show (ErrorSintactico linea errorSyn) =
-        "Error: línea " ++ show linea ++ ": " ++ mensajeError errorSyn
+        "Error: línea " ++ show linea ++ ": " ++ mensajeErrorV1 errorSyn
+    show (ErrorSemantico s) = s
 
-data ErrorSyntax
+data ErrorV1
     = ClaveDesconocida String
     | FormaClaveValor String
     | CampoAusente String
@@ -100,15 +103,15 @@ data ErrorSyntax
     | IdInvalido String
     deriving (Eq, Show)
 
-mensajeError :: ErrorSyntax -> String
-mensajeError (ClaveDesconocida clave)   = "Clave desconocida '" ++ clave ++ "'"
-mensajeError (FormaClaveValor texto)    = "Formato CLAVE: valor inválido: '" ++ texto ++ "'"
-mensajeError (CampoAusente campo)       = "Campo obligatorio ausente: " ++ campo ++ "'"
-mensajeError (CampoRepetido campo)      = "Campo repetido: '" ++ campo ++ "'"
-mensajeError (SalidaMalFormada salida)  = "Salida mal formada: '" ++ salida ++ "'"
-mensajeError (MetaMalFormada meta)      = "Meta mal formada: '" ++ meta ++ "'"
-mensajeError (DireccionInexistente dir) = "Dirección inexistente: '" ++ dir ++ "'"
-mensajeError (IdInvalido iden)          = "Identificador inválido: '" ++ iden ++ "'"
+mensajeErrorV1 :: ErrorV1 -> String
+mensajeErrorV1 (ClaveDesconocida clave)   = "Clave desconocida '" ++ clave ++ "'"
+mensajeErrorV1 (FormaClaveValor texto)    = "Formato CLAVE: valor inválido: '" ++ texto ++ "'"
+mensajeErrorV1 (CampoAusente campo)       = "Campo obligatorio ausente: " ++ campo ++ "'"
+mensajeErrorV1 (CampoRepetido campo)      = "Campo repetido: '" ++ campo ++ "'"
+mensajeErrorV1 (SalidaMalFormada salida)  = "Salida mal formada: '" ++ salida ++ "'"
+mensajeErrorV1 (MetaMalFormada meta)      = "Meta mal formada: '" ++ meta ++ "'"
+mensajeErrorV1 (DireccionInexistente dir) = "Dirección inexistente: '" ++ dir ++ "'"
+mensajeErrorV1 (IdInvalido iden)          = "Identificador inválido: '" ++ iden ++ "'"
 
-reportarErrorSyntax :: ErrorSyntax -> Int -> ErrorSintactico
-reportarErrorSyntax errorSyn linea = ErrorSintactico linea errorSyn
+reportarErrorV1 :: ErrorV1 -> Int -> ErrorMundo
+reportarErrorV1 errorSyn linea = ErrorSintactico linea errorSyn
