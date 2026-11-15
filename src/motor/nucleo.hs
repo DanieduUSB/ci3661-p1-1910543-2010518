@@ -34,7 +34,13 @@ ejecutar (Soltar idObj) estado = undefined
 
 ejecutar (Examinar idObj) estado = undefined
 
-ejecutar Inventario estado = undefined
+ejecutar Inventario estado =
+    ( "Inventario:" : contenido, estado )
+    where
+        inv = inventario estado
+        contenido
+            | Set.null inv  = ["(Vacío)"]
+            | otherwise     = map (\(IdObjeto str) -> str) (Set.toList inv)
 
 ejecutar (Guardar path) estado = undefined
 
@@ -42,4 +48,7 @@ ejecutar (Cargar path) estado = undefined
 
 ejecutar Ayuda estado = undefined
 
-ejecutar Salir estado = undefined
+ejecutar Salir estado =
+    ( [ "Saliendo del juego..." ]
+    , estado { juegoTerminado = True }
+    )
