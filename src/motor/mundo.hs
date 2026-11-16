@@ -2,8 +2,6 @@ module Motor.Mundo
     ( leerMundo
     , prepararLineas
     , separarBloques
-    , esBloque
-    , organizarBloques
     , reconocerSintaxis
     ) where
 
@@ -17,70 +15,13 @@ import qualified Data.Map.Strict as Map
 
 -- Tipos de dato auxiliares
 type LineaNumerada = (Int, String)
-
 type Bloque = [LineaNumerada]
-
-data BloquesTexto = BloquesTexto
-    { bloqueCabecera     :: Bloque
-    , bloquesObjetos     :: [Bloque]
-    , bloquesSalas       :: [Bloque]
-    , bloquesDesconocidos :: [Bloque]
-    } deriving (Show)
 
 leerMundo :: String -> Either [ErrorMundo] Mundo
 leerMundo = undefined
 
 reconocerSintaxis :: String -> Either [ErrorMundo] Mundo
-reconocerSintaxis texto =
-    let bloques = organizarBloques texto
-
-        -- Reconocer la cabecera
-        (erroresCab, cabeceras) =
-            partitionEithers
-                [reconocerBloque "cabecera" leerCabecera
-                    (bloqueCabecera bloques)]
-
-        -- Reconocer todos los objetos
-        (erroresObj, objetos) =
-            partitionEithers
-                [ reconocerBloque "objeto" leerBloqObj bloque
-                | bloque <- bloquesObjetos bloques
-                ]
-
-        -- Reconocer todas las salas
-        (erroresSala, salas) =
-            partitionEithers
-                [ reconocerBloque "sala" leerBloqSala bloque
-                | bloque <- bloquesSalas bloques
-                ]
-
-        -- Registrar bloques de tipo desconocido
-        erroresOtros =
-            concatMap errorBloqueDesconocido
-                (bloquesDesconocidos bloques)
-
-        -- Reunir errores
-        errores =
-            erroresCab ++ erroresObj ++ erroresSala ++ erroresOtros
-
-    in case (errores, cabeceras) of
-        ([], [cabecera]) ->
-            Right cabecera
-                { mundoSalas = agruparPor salaId salas
-                , mundoObjetos = agruparPor objetoId objetos
-                }
-
-        (_:_, _) -> Left errores
-
-        ([], _) -> Left [V1 1 (CampoAusente "MUNDO")]
-
-reconocerBloque :: String -> ReadS a -> Bloque -> Either ErrorMundo a
-reconocerBloque tipo reconocedor bloque =
-    case reconocerCompleto reconocedor (textoBloque bloque) of
-        Just valor -> Right valor
-        Nothing ->
-            Left (V1 (numeroBloque bloque)
-                     (FormaClaveValor ("Bloque " ++ tipo ++ " no reconocido")))
+reconocerSintaxis = undefined
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
@@ -89,27 +30,6 @@ numeroBloque [] = 1
 textoBloque :: Bloque -> String
 textoBloque bloque =
     unlines (map snd bloque)
-
-organizarBloques :: String -> BloquesTexto
-organizarBloques texto =
-    case separarBloques texto of
-        [] -> BloquesTexto [] [] [] []
-
-        (cabecera:resto) ->
-            let (objetos, salas, desconocidos) =
-                    foldr clasificar ([], [], []) resto
-            in BloquesTexto cabecera objetos salas desconocidos
-
-    where
-        clasificar bloque (objetos, salas, desconocidos)
-            | esBloque "OBJETO:" bloque =
-                (bloque:objetos, salas, desconocidos)
-
-            | esBloque "SALA:" bloque =
-                (objetos, bloque:salas, desconocidos)
-
-            | otherwise =
-                (objetos, salas, bloque:desconocidos)
 
 prepararLineas :: String -> [LineaNumerada]
 prepararLineas texto =
@@ -133,13 +53,6 @@ separarBloques texto =
 
         separar linea [] = [[linea]]
 
-esBloque :: String -> Bloque -> Bool
-esBloque clave ((_, linea):_) =
-    clave `isPrefixOf` linea
-
-esBloque _ [] = False
-
--- Agrupa por clave
 agruparPor :: Ord k => (a -> k) -> [a] -> Map.Map k [a]
 agruparPor obtenerClave =
     foldr agregar Map.empty
@@ -150,12 +63,87 @@ agruparPor obtenerClave =
                 [valor]
                 mapa
 
-errorBloqueDesconocido :: Bloque -> [ErrorMundo]
-errorBloqueDesconocido [] = []
-errorBloqueDesconocido ((numero, linea):_) =
-    case break (== ':') linea of
-        (_, []) ->
-            [V1 numero (FormaClaveValor linea)]
+data TipoBloque = TCabecera | TObjeto | TSala
+    deriving (Eq, Show)
 
-        (nombre, _) ->
+-- (Nombre del campo, obligatorio, puede repetirse)
+reglas :: TipoBloque -> [(String, Bool, Bool)]
+reglas TCabecera =
+    [ ("MUNDO", True, False)
+    , ("INICIO", True, False)
+    , ("META", True, False)
+    , ("CAPACIDAD", True, False)
+    ]
+
+reglas TObjeto =
+    [ ("OBJETO", True, False)
+    , ("DESC", True, False)
+    , ("PESO", False, False)
+    ]
+
+reglas TSala =
+    [ ("SALA", True, False)
+    , ("DESC", True, False)
+    , ("SALIDA", False, True)
+    , ("OBJETO", False, True)
+    ]
+
+partirClave :: String -> Maybe (String, String)
+partirClave linea =
+    case break (== ':') linea of
+        (nombre, ':' : valor)
+            | not (null nombre)
+            , all (\c -> c >= 'A' && c <= 'Z') nombre
+                -> Just (nombre, valor)
+
+        _ -> Nothing
+
+validarValor :: LineaNumerada -> String -> String -> [ErrorMundo]
+validarValor (numero, linea) nombre valor =
+    case nombre of
+        "MUNDO" ->
+            comprobar lineaMundo (FormaClaveValor linea)
+
+        "INICIO" ->
+            comprobar lineaInicio (IdInvalido valor)
+
+        "META" ->
+            comprobar lineaMeta (MetaMalFormada linea)
+
+        "CAPACIDAD" ->
+            comprobar lineaCapacidad (FormaClaveValor linea)
+
+        "OBJETO" ->
+            comprobar lineaObjeto (IdInvalido valor)
+
+        "SALA" ->
+            comprobar lineaSala (IdInvalido valor)
+
+        "DESC" ->
+            comprobar lineaDesc (FormaClaveValor linea)
+
+        "SALIDA" ->
+            comprobar lineaSalida (errorSalida linea valor)
+
+        "PESO" ->
+            comprobar lineaPeso (FormaClaveValor linea)
+
+        _ ->
             [V1 numero (ClaveDesconocida nombre)]
+
+    where
+        comprobar :: ReadS a -> ErrorV1 -> [ErrorMundo]
+        comprobar reconocedor errorV =
+            case reconocerCompleto reconocedor linea of
+                Just _  -> []
+                Nothing -> [V1 numero errorV]
+
+errorSalida :: String -> String -> ErrorV1
+errorSalida linea valor =
+    case words valor of
+        (dir:_)
+            | dir `notElem`
+                ["norte", "sur", "este", "oeste", "arriba", "abajo"]
+                -> DireccionInexistente dir
+
+        _ -> SalidaMalFormada linea
