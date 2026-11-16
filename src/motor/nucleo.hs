@@ -31,19 +31,32 @@ ejecutar (Ir dir) estado =
     case salida of
         -- Caso: No hay una salida en esa dirección
         []  -> (["No hay salida en dirección " ++ show dir], estado)
-        -- Caso: Hay una salida en esa dirección, hay que verificar si hay condición de victoria o no
+        -- Caso: Hay una salida en esa dirección
         h:_
+            -- La salida está bloqueada
+            | not (puedeCruzar h estado) ->
+                (["La salida está bloqueada. Necesita " ++ show (salidaRequisito h)]
+                , estado
+                )
+            -- La salida se puede cruzar y se cumple la meta
             | verificarVictoria meta (salidaDestino h) inv
                 -> (["*** ¡Has ganado! ***"]
-                    , estado
-                        { salaActual        = salidaDestino h
-                        , juegoTerminado    = True
-                        }
+                    , nuevoEstado { juegoTerminado    = True }
                     )
+            -- La salida se puede cruzar
             | otherwise
                 -> (["Avanzaste a la sala " ++ show (salidaDestino h)]
-                    , estado { salaActual = salidaDestino h }
+                    , nuevoEstado
                     )
+            where
+                nuevoEstado = estado
+                    { salaActual = salidaDestino h
+                    , salidasDesbloqueadas = case salidaRequisito h of
+                        Nothing -> salidasDesbloqueadas estado
+                        Just _ -> Set.insert
+                            (salaActual estado, dir)
+                            (salidasDesbloqueadas estado)
+                    }
     where
         salas = mundoSalas (estadoMundo estado)
         -- !! no falla ya que la sala actual debe estar en la lista de salas. Esta comprobación
@@ -218,3 +231,15 @@ pesoObjeto idObj mundo =
         -- Este caso nunca debería de ocurrir porque pesoObjeto se llama siempre con
         -- objetos existentes
         _           -> 0
+
+-- Función auxiliar puedeCruzar
+-- Determina si un jugador posee los requisitos necesarios para acceder a la siguiente salida o no
+puedeCruzar :: Salida -> Estado -> Bool
+puedeCruzar salida estado =
+    case salidaRequisito salida of
+        Nothing -> True
+        Just obj ->
+            Set.member obj (inventario estado)
+            || Set.member identificador (salidasDesbloqueadas estado)
+    where
+        identificador = (salaActual estado, salidaDireccion salida)
