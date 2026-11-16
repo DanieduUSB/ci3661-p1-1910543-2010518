@@ -93,11 +93,12 @@ data Meta
 -- Estado
 
 data Estado = Estado
-    { estadoMundo       :: Mundo
-    , salaActual        :: IdSala
-    , inventario        :: Set.Set IdObjeto
-    , objetosPorSala    :: Map.Map IdSala (Set.Set IdObjeto)
-    , juegoTerminado    :: Bool
+    { estadoMundo           :: Mundo
+    , salaActual            :: IdSala
+    , inventario            :: Set.Set IdObjeto
+    , objetosPorSala        :: Map.Map IdSala (Set.Set IdObjeto)
+    , salidasDesbloqueadas  :: Set.Set (IdSala, Direccion)
+    , juegoTerminado        :: Bool
     } deriving (Eq)
 
 -- Comando
