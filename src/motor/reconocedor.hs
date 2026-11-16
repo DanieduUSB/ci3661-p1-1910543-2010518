@@ -15,6 +15,7 @@ module Motor.Reconocedor
 
 import Motor.Tipos
 
+import qualified Data.Map.Strict as Map
 import Data.List (stripPrefix, dropWhileEnd, isPrefixOf)
 import Data.Char (isSpace)
 
@@ -103,7 +104,7 @@ reconocerCompleto reconocedor entrada =
 -- Reconocimiento de cabecera
 leerCabecera :: ReadS Mundo
 leerCabecera texto =
-    [ (Mundo titulo inicio meta [] [] capacidad, "")
+    [ (Mundo titulo inicio meta Map.empty Map.empty capacidad, "")
     | let ls = map limpiar (lines texto)
 
     -- Campo MUNDO
@@ -160,10 +161,10 @@ leerBloqObj texto =
 -- Reconocimiento de bloque de sala
 leerBloqSala :: ReadS Sala
 leerBloqSala texto =
-    [ (Sala sala descripcion salidas objetos, "")
+    [ (Sala sala descripcion salidasAgrupadas objetos, "")
     | let ls = map limpiar (lines texto)
 
-    -- Primera linea: SALA
+    -- Primera línea: SALA
     , (primera:resto) <- [ls]
     , Just sala <- [reconocerCompleto lineaSala primera]
 
@@ -172,18 +173,29 @@ leerBloqSala texto =
     , [lineaD] <- [descripciones]
     , Just descripcion <- [reconocerCompleto lineaDesc lineaD]
 
-    -- Salidas de la sala
+    -- Reconocer las salidas
     , let lineasSalida = filter (isPrefixOf "SALIDA:") resto
     , Just salidas <- [mapM (reconocerCompleto lineaSalida) lineasSalida]
 
-    -- Objetos de la sala
+    -- Agrupar las salidas en un Map
+    , let salidasAgrupadas = agruparSalidas salidas
+
+    -- Reconocer los objetos
     , let lineasObjeto = filter (isPrefixOf "OBJETO:") resto
     , Just objetos <- [mapM (reconocerCompleto lineaObjeto) lineasObjeto]
 
-    -- Verificar que no haya campos adicionales
+    -- Verificar que no existan campos adicionales
     , length resto ==
         length descripciones + length lineasSalida + length lineasObjeto
     ]
+
+-- Funcion auxiliar para agrupar las salidas segun dirección
+agruparSalidas :: [Salida] -> Map.Map Direccion [Salida]
+agruparSalidas salidas =
+    foldr agregar Map.empty salidas
+    where
+        agregar salida mapa =
+            Map.insertWith (++) (salidaDireccion salida) [salida] mapa
 
 -- LECTURA POR LINEAS
 
