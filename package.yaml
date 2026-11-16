@@ -68,6 +68,7 @@ tests:
     - Reconocedor
     - Mundo
     - Datos.MundoPrueba
+    - Datos.EstadoPrueba
     ghc-options:
     - -threaded
     - -rtsopts

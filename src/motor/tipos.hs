@@ -99,7 +99,7 @@ data Estado = Estado
     , objetosPorSala        :: Map.Map IdSala (Set.Set IdObjeto)
     , salidasDesbloqueadas  :: Set.Set (IdSala, Direccion)
     , juegoTerminado        :: Bool
-    } deriving (Eq)
+    } deriving (Eq, Show)
 
 -- Comando
 
