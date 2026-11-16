@@ -21,6 +21,8 @@ estadoInicial m = Estado
     , juegoTerminado    = False
     }
 
+
+
 -- Para cada comando existente realiza una acción distinta
 ejecutar :: Comando -> Estado -> ([String], Estado)
 
@@ -50,6 +52,7 @@ ejecutar (Ir dir) estado =
         meta = mundoMeta (estadoMundo estado)
         inv = inventario estado
 
+
 ejecutar Mirar estado =
     (   [ "Sala actual: " ++ show (salaActual estado)
         , desc
@@ -77,9 +80,28 @@ ejecutar Mirar estado =
         salidas = map (\s -> show s) (concat (Map.elems (salaSalidas sala)))
 
 
-ejecutar (Tomar idObj) estado = undefined
+ejecutar (Tomar idObj) estado
+    | not (Set.member idObj objs) =
+        ([show idObj ++ " no se encuentra en esta sala"], estado)
+    | otherwise =
+        (["Tomaste " ++ show idObj]
+        , estado
+            { inventario = Set.insert idObj inv
+            , objetosPorSala = Map.adjust
+                (Set.delete idObj)
+                (salaActual estado)
+                (objetosPorSala estado)
+            }
+        )
+    where
+        objs = Map.findWithDefault Set.empty
+            (salaActual estado)
+            (objetosPorSala estado)
+        inv = inventario estado
+
 
 ejecutar (Soltar idObj) estado = undefined
+
 
 ejecutar (Examinar idObj) estado
     -- Caso: El objeto no está en el inventario ni en la sala
@@ -100,6 +122,7 @@ ejecutar (Examinar idObj) estado
             -- Caso: El objeto no existe (No fue declarado nunca)
             _           -> ["No existe el objeto " ++ show idObj]
 
+
 ejecutar Inventario estado =
     ( "Inventario:" : contenido, estado )
     where
@@ -108,9 +131,12 @@ ejecutar Inventario estado =
             | Set.null inv  = ["(Vacío)"]
             | otherwise     = map (\(IdObjeto str) -> str) (Set.toList inv)
 
+
 ejecutar (Guardar path) estado = undefined
 
+
 ejecutar (Cargar path) estado = undefined
+
 
 ejecutar Ayuda estado =
     ("Comandos disponibles:" : map ayudaComando comandos, estado)
@@ -128,10 +154,13 @@ ejecutar Ayuda estado =
             , Salir
             ]
 
+
 ejecutar Salir estado =
     ( [ "Saliendo del juego..." ]
     , estado { juegoTerminado = True }
     )
+
+
 
 -- Función Auxiliar: ayudaComando
 ayudaComando :: Comando -> String
