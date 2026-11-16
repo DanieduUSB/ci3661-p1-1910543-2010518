@@ -12,8 +12,8 @@ leerComando entrada =
         ["mirar"]           -> Just Mirar
         ["tomar", idObj]    -> Just (Tomar (IdObjeto idObj))
         ["coger", idObj]    -> Just (Tomar (IdObjeto idObj))
-        ["soltar", idObj]     -> Just (Soltar (IdObjeto idObj))
-        ["examinar", idObj]   -> Just (Examinar (IdObjeto idObj))
+        ["soltar", idObj]   -> Just (Soltar (IdObjeto idObj))
+        ["examinar", idObj] -> Just (Examinar (IdObjeto idObj))
         ["inventario"]      -> Just Inventario
         ["inv"]             -> Just Inventario
         ["guardar", path]   -> Just (Guardar path)
