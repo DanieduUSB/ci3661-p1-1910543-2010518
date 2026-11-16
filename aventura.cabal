@@ -63,6 +63,7 @@ test-suite aventura-test
       Nucleo
       Reconocedor
       Mundo
+      Datos.MundoPrueba
   hs-source-dirs:
       test
       test/modulos

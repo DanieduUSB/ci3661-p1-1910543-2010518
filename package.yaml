@@ -67,6 +67,7 @@ tests:
     - Nucleo
     - Reconocedor
     - Mundo
+    - Datos.MundoPrueba
     ghc-options:
     - -threaded
     - -rtsopts
