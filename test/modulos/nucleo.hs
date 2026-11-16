@@ -28,6 +28,7 @@ testsNucleo = TestList
     , TestLabel "Meta incompleta"                   testMetaIncompleta
     , TestLabel "Secuencia de comandos ganadora"    testSecuenciaGanadora
     , TestLabel "Salida bloqueada y recuperación"   testSalidaBloqueadaRecuperacion
+    , TestLabel "Capacidad y recuperación"          testCapacidad
     ]
 
 testEstadoInicial :: Test
@@ -242,6 +243,39 @@ testSalidaBloqueadaRecuperacion = TestCase $ do
     assertBool "La salida queda desbloqueada"
         (Set.member (IdSala "calle", Norte)
             (salidasDesbloqueadas final))
+
+
+testCapacidad :: Test
+testCapacidad = TestCase $ do
+    let inicio = estadoInicial mundoMetaSinRequisito
+        
+        antes = ejecutarSecuencia inicio
+            [ Tomar (IdObjeto "llave_magnetica")
+            , Ir Norte
+            , Ir Arriba
+            , Ir Arriba
+            , Ir Este
+            , Tomar (IdObjeto "llave")
+            , Ir Oeste
+            , Ir Abajo
+            , Ir Este
+            ]
+
+        rechazado = ejecutarSecuencia antes
+            [Tomar (IdObjeto "paracaidas")]
+
+        final = ejecutarSecuencia rechazado
+            [ Soltar (IdObjeto "llave_magnetica")
+            , Tomar (IdObjeto "paracaidas")
+            ]
+
+    assertEqual "El peso excesivo no modifica el estado" antes rechazado
+
+    assertBool "Puede recogerlo después de soltar otro objeto"
+        (Set.member (IdObjeto "paracaidas") (inventario final))
+
+    assertBool "La llave magnética ya no está en el inventario"
+        (Set.notMember (IdObjeto "llave_magnetica") (inventario final))
 
 
 -- Función auxiliar objetosEnSalaActual
