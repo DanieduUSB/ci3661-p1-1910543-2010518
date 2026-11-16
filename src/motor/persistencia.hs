@@ -17,4 +17,8 @@ leerArchivo ruta = do
         Right contenido -> return (Right contenido)
 
 escribirArchivo :: FilePath -> String -> IO (Either String ())
-escribirArchivo = undefined
+escribirArchivo ruta contenido = do
+    resultado <- try (writeFile ruta contenido) :: IO (Either IOException ())
+    case resultado of
+        Left err -> return (Left (show err))
+        Right () -> return (Right ())
