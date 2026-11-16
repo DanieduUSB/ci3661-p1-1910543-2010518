@@ -3,6 +3,7 @@ module Nucleo (testsNucleo) where
 import Test.HUnit
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
+import Data.List (isInfixOf)
 
 import Motor.Tipos
 import Motor.Nucleo
@@ -26,6 +27,14 @@ testsNucleo = TestList
     , TestLabel "Victoria sin requisito"            testVictoriaSinRequisito
     , TestLabel "Victoria con requisito"            testVictoriaConRequisito
     , TestLabel "Meta incompleta"                   testMetaIncompleta
+    , TestLabel "Tomar dos veces"                   testTomarDosVeces
+    , TestLabel "Soltar objeto ausente"             testSoltarAusente
+    , TestLabel "Examinar objeto en sala"           testExaminarSala
+    , TestLabel "Examinar objeto en inventario"     testExaminarInventario
+    , TestLabel "Examinar objeto inaccesible"       testExaminarInaccesible
+    , TestLabel "Peso exacto"                       testPesoExacto
+    , TestLabel "Movimiento fallido"                testMovimientoFallido
+    , TestLabel "Peso después de soltar"            testPesoDespuesDeSoltar
     , TestLabel "Secuencia de comandos ganadora"    testSecuenciaGanadora
     , TestLabel "Salida bloqueada y recuperación"   testSalidaBloqueadaRecuperacion
     , TestLabel "Capacidad y recuperación"          testCapacidad
@@ -192,6 +201,121 @@ testMetaIncompleta = TestCase $ do
     assertEqual "Puede entrar a la azotea" (IdSala "azotea") (salaActual nuevoEstado)
 
 
+testTomarDosVeces :: Test
+testTomarDosVeces = TestCase $ do
+    let objeto = IdObjeto "llave_magnetica"
+        (_, estado1) = ejecutar (Tomar objeto) estadoPrueba
+        (_, estado2) = ejecutar (Tomar objeto) estado1
+
+    assertEqual "El segundo intento no modifica el estado" estado1 estado2
+
+    assertEqual "El inventario contiene un solo objeto" 1 (Set.size (inventario estado2))
+
+
+testSoltarAusente :: Test
+testSoltarAusente = TestCase $ do
+    let (_, nuevoEstado) =
+            ejecutar (Soltar (IdObjeto "llave")) estadoPrueba
+
+    assertEqual "No puede soltar un objeto que no posee" estadoPrueba nuevoEstado
+
+
+testExaminarSala :: Test
+testExaminarSala = TestCase $ do
+    let (mensajes, nuevo) =
+            ejecutar (Examinar (IdObjeto "llave_magnetica")) estadoPrueba
+
+    assertBool "Muestra la descripción del objeto"
+        (any (isInfixOf "cerradura magnética") mensajes)
+
+    assertEqual "Examinar no modifica el estado" estadoPrueba nuevo
+
+
+testExaminarInventario :: Test
+testExaminarInventario = TestCase $ do
+    let (_, conLlave) = ejecutar (Tomar (IdObjeto "llave_magnetica")) estadoPrueba
+
+        (mensajes, nuevo) = ejecutar (Examinar (IdObjeto "llave_magnetica")) conLlave
+
+    assertBool "Muestra la descripción del objeto del inventario"
+        (any (isInfixOf "cerradura magnética") mensajes)
+
+    assertEqual "Examinar no modifica el estado" conLlave nuevo
+
+
+testExaminarInaccesible :: Test
+testExaminarInaccesible = TestCase $ do
+    let (mensajes, nuevo) = ejecutar (Examinar (IdObjeto "paracaidas")) estadoPrueba
+
+    assertBool "No muestra la descripción del objeto inaccesible"
+        (not (any (isInfixOf "Parece funcional") mensajes))
+
+    assertEqual "El estado permanece igual" estadoPrueba nuevo
+
+
+testPesoExacto :: Test
+testPesoExacto = TestCase $ do
+    let estado = estadoPrueba
+            { salaActual = IdSala "apto_1_b"
+            , inventario = Set.fromList
+                [ IdObjeto "llave_magnetica"
+                , IdObjeto "llave"
+                , IdObjeto "paracaidas"
+                ]
+            }
+
+        (_, nuevo) = ejecutar (Tomar (IdObjeto "palanca")) estado
+
+    assertEqual "El peso del inventario alcanza la capacidad"
+        (mundoCapacidad (estadoMundo nuevo))
+        (pesoInventario nuevo)
+
+    assertBool "Permite tomar el objeto al alcanzar exactamente la capacidad"
+        (Set.member (IdObjeto "palanca") (inventario nuevo))
+
+
+testMovimientoFallido :: Test
+testMovimientoFallido = TestCase $ do
+    let (_, nuevo) = ejecutar (Ir Norte) estadoPrueba
+
+    assertEqual "No cambia la sala actual" (IdSala "calle") (salaActual nuevo)
+
+    assertBool "No desbloquea ninguna salida" (Set.null (salidasDesbloqueadas nuevo))
+
+
+testPesoDespuesDeSoltar :: Test
+testPesoDespuesDeSoltar = TestCase $ do
+    let inicial = estadoPrueba
+            { salaActual = IdSala "apto_1_b"
+            , inventario = Set.fromList
+                [ IdObjeto "llave_magnetica"
+                , IdObjeto "llave"
+                , IdObjeto "paracaidas"
+                ]
+            }
+
+        -- Inventario inicial: peso 8
+        (_, conPalanca) = ejecutar (Tomar (IdObjeto "palanca")) inicial
+
+        -- Inventario: peso 11
+        (_, sinParacaidas) = ejecutar (Soltar (IdObjeto "paracaidas")) conPalanca
+
+        -- Inventario: peso 7
+        (_, conParacaidas) = ejecutar (Tomar (IdObjeto "paracaidas")) sinParacaidas
+
+    assertEqual "Peso inicial" 8 (pesoInventario inicial)
+
+    assertEqual "Peso al tomar la palanca" 11 (pesoInventario conPalanca)
+
+    assertEqual "Peso despues de soltar el paracaidas" 7 (pesoInventario sinParacaidas)
+
+    assertEqual "Peso despues de recuperar el paracaidas" 11 (pesoInventario conParacaidas)
+
+    assertEqual "Inventario final igual a la capacidad"
+        (mundoCapacidad (estadoMundo conParacaidas))
+        (pesoInventario conParacaidas)
+
+
 testSecuenciaGanadora :: Test
 testSecuenciaGanadora = TestCase $ do
     let final = ejecutarSecuencia estadoPrueba
@@ -289,3 +413,15 @@ objetosEnSalaActual estado =
 -- Ejecuta una lista de comandos consecutivamente
 ejecutarSecuencia :: Estado -> [Comando] -> Estado
 ejecutarSecuencia = foldl (\estado comando -> snd (ejecutar comando estado))
+
+-- Función auxiliar pesoInventario
+pesoInventario :: Estado -> Int
+pesoInventario estado =
+    sum (map obtenerPeso (Set.toList (inventario estado)))
+    where
+        objetos = mundoObjetos (estadoMundo estado)
+
+        obtenerPeso idObj =
+            case Map.lookup idObj objetos of
+                Just [obj] -> objetoPeso obj
+                _          -> 0
