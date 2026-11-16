@@ -84,6 +84,8 @@ ejecutar Mirar estado =
 ejecutar (Tomar idObj) estado
     | not (Set.member idObj objs) =
         ([show idObj ++ " no se encuentra en esta sala"], estado)
+    | pesoInv + (pesoObjeto idObj mundo) > mundoCapacidad mundo =
+        ([show idObj ++ " es muy pesado. Considera soltar otros objetos"], estado)
     | otherwise =
         (["Tomaste " ++ show idObj]
         , estado
@@ -95,10 +97,10 @@ ejecutar (Tomar idObj) estado
             }
         )
     where
-        objs = Map.findWithDefault Set.empty
-            (salaActual estado)
-            (objetosPorSala estado)
-        inv = inventario estado
+        objs    = Map.findWithDefault Set.empty (salaActual estado) (objetosPorSala estado)
+        inv     = inventario estado
+        mundo   = estadoMundo estado
+        pesoInv = Set.foldr (\idObjeto acc -> pesoObjeto idObjeto mundo + acc) 0 inv
 
 
 ejecutar (Soltar idObj) estado
@@ -133,9 +135,11 @@ ejecutar (Examinar idObj) estado
         objs        = mundoObjetos (estadoMundo estado)
         strLista    = case Map.lookup idObj objs of
             -- Caso: El objeto existe
-            Just [obj]  -> [show idObj ++ ":", objetoDesc obj]
+            Just [obj]  -> [show idObj ++ ":"
+                            , objetoDesc obj
+                            , "Pesa " ++ show (objetoPeso obj) ++ "UPF (Unidades de Peso Ficticias)"]
             -- Caso: El objeto no existe (No fue declarado nunca)
-            _           -> ["No existe el objeto " ++ show idObj]
+            _           -> ["No tienes acceso al objeto " ++ show idObj]
 
 
 ejecutar Inventario estado =
@@ -204,3 +208,13 @@ verificarVictoria (Llevar idObj idSala) sala inv
         = True
     | otherwise
         = False
+
+-- Función auxiliar pesoObjeto
+-- Retorna el peso de un objeto, si existe
+pesoObjeto :: IdObjeto -> Mundo -> Int
+pesoObjeto idObj mundo =
+    case Map.lookup idObj (mundoObjetos mundo) of
+        Just [obj]  -> objetoPeso obj
+        -- Este caso nunca debería de ocurrir porque pesoObjeto se llama siempre con
+        -- objetos existentes
+        _           -> 0
