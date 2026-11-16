@@ -113,6 +113,7 @@ data Comando
     | Cargar FilePath
     | Ayuda
     | Salir
+    deriving (Eq, Show)
 
 -- Errores
 
