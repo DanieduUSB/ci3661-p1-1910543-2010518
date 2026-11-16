@@ -1,9 +1,71 @@
 module Comandos (testsComandos) where
 
 import Test.HUnit
+import Motor.Tipos
+import Motor.Comandos
 
 testsComandos :: Test
-testsComandos = TestList []
+testsComandos = TestList
+    [ TestCase $ assertEqual
+        "ir norte"
+        (Just (Ir Norte))
+        (leerComando "ir norte")
+
+    , TestCase $ assertEqual
+        "ir arriba"
+        (Just (Ir Arriba))
+        (leerComando "ir arriba")
+
+    , TestCase $ assertEqual
+        "ir con dirección no existente"
+        Nothing
+        (leerComando "ir calacras")
+
+    , TestCase $ assertEqual
+        "mirar"
+        (Just Mirar)
+        (leerComando "mirar")
+
+    , TestCase $ assertEqual
+        "tomar id_obj (Comando con argumento)"
+        (Just (Tomar (IdObjeto "carnet")))
+        (leerComando "tomar carnet")
+
+    , TestCase $ assertEqual
+        "Alias coger coso"
+        (Just (Tomar (IdObjeto "coso")))
+        (leerComando "coger coso")
+
+    , TestCase $ assertEqual
+        "comando en mayúsculas"
+        (Just Salir)
+        (leerComando "SALIR")
+
+    , TestCase $ assertEqual
+        "comando con argumento mayúsculas y minúsculas"
+        (Just (Ir Este))
+        (leerComando "iR ESte")
+    
+    , TestCase $ assertEqual
+        "comando inexistente"
+        Nothing
+        (leerComando "hackear")
+    
+    , TestCase $ assertEqual
+        "comando con argumento, sin colocar argumento"
+        Nothing
+        (leerComando "soltar")
+    
+    , TestCase $ assertEqual
+        "comando con argumento, sin colocar argumento, con espacio después del comando"
+        Nothing
+        (leerComando "examinar ")
+    
+    , TestCase $ assertEqual
+        "comando con argumento, con mas de un argumento"
+        Nothing
+        (leerComando "soltar id objeto")
+    ]
 
 -- Cada prueba individual tiene una de las siguientes estructuras:
 -- TestCase $ assertEqual "descripción" resultadoEsperado resultadoReal
