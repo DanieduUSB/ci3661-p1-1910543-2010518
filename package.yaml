@@ -59,10 +59,13 @@ executables:
 tests:
   aventura-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:
+    - test
+    - test/modulos
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - aventura
+    - HUnit
