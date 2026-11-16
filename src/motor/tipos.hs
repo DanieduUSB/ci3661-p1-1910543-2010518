@@ -37,7 +37,18 @@ data Mundo = Mundo
     , mundoSalas        :: Map.Map IdSala [Sala]
     , mundoObjetos      :: Map.Map IdObjeto [Objeto]
     , mundoCapacidad    :: Int
-    } deriving (Eq, Show)
+    } deriving (Eq)
+
+instance Show Mundo where
+    show m =
+        "Mundo: " ++ mundoTitulo m ++ "\n" ++
+        "Inicio: " ++ show (mundoInicio m) ++ "\n" ++
+        "Meta: " ++ show (mundoMeta m) ++ "\n" ++
+        "Capacidad: " ++ show (mundoCapacidad m) ++ "\n\n" ++
+        "=== SALAS ===\n" ++
+        unlines (map show (concat (Map.elems (mundoSalas m)))) ++
+        "\n=== OBJETOS ===\n" ++
+        unlines (map show (concat (Map.elems (mundoObjetos m))))
 
 -- Sala
 
@@ -46,7 +57,25 @@ data Sala = Sala
     , salaDesc      :: String
     , salaSalidas   :: Map.Map Direccion [Salida]
     , salaObjetos   :: [IdObjeto]
-    } deriving (Eq, Show)
+    } deriving (Eq)
+
+instance Show Sala where
+    show sala =
+        "Sala: " ++ show (salaId sala) ++ "\n" ++
+        "Descripción: " ++ salaDesc sala ++ "\n" ++
+        "Objetos:\n" ++ mostrarObjetos (salaObjetos sala) ++
+        "Salidas:\n" ++ mostrarSalidas (salaSalidas sala)
+
+mostrarObjetos :: [IdObjeto] -> String
+mostrarObjetos [] = "  (Ninguno)\n"
+mostrarObjetos objs =
+    unlines (map (\(IdObjeto ident) -> "  - " ++ ident) objs)
+
+mostrarSalidas :: Map.Map Direccion [Salida] -> String
+mostrarSalidas mapa
+    | Map.null mapa = "  (Ninguna)\n"
+    | otherwise =
+        unlines (map show (concat (Map.elems mapa)))
 
 -- Objeto
 
@@ -54,7 +83,13 @@ data Objeto = Objeto
     { objetoId    :: IdObjeto
     , objetoDesc  :: String
     , objetoPeso  :: Int
-    } deriving (Eq, Show)
+    } deriving (Eq)
+
+instance Show Objeto where
+    show obj =
+        "Objeto: " ++ show (objetoId obj) ++ "\n" ++
+        "Descripción: " ++ objetoDesc obj ++ "\n" ++
+        "Peso: " ++ show (objetoPeso obj)
 
 -- Salida
 
@@ -99,7 +134,22 @@ data Estado = Estado
     , objetosPorSala        :: Map.Map IdSala (Set.Set IdObjeto)
     , salidasDesbloqueadas  :: Set.Set (IdSala, Direccion)
     , juegoTerminado        :: Bool
-    } deriving (Eq, Show)
+    } deriving (Eq)
+
+instance Show Estado where
+    show e =
+        "=== ESTADO ===\n" ++
+        "Sala actual: " ++ show (salaActual e) ++ "\n" ++
+        "Inventario:\n" ++
+        unlines (map show (Set.toList (inventario e))) ++
+        "Objetos por sala:\n" ++
+        unlines
+            [ show sala ++ ": " ++ show (Set.toList objs)
+            | (sala, objs) <- Map.toList (objetosPorSala e)
+            ] ++
+        "Salidas desbloqueadas:\n" ++
+        unlines (map show (Set.toList (salidasDesbloqueadas e))) ++
+        "Juego terminado: " ++ show (juegoTerminado e)
 
 -- Comando
 
