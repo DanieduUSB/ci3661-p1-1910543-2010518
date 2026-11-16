@@ -16,15 +16,44 @@ import Motor.Nucleo
 
 -- El objetivo es llegar a la azotea con un paracaidas
 mundoMetaConRequisito :: Mundo
-mundoMetaConRequisito = undefined
+mundoMetaConRequisito = Mundo
+    { mundoTitulo    = "Edificio Abandonado - Meta con requisito"
+    , mundoInicio    = IdSala "calle"
+    , mundoMeta      = Llevar (IdObjeto "paracaidas") (IdSala "azotea")
+    , mundoSalas     = salasPrueba
+    , mundoObjetos   = objetosPrueba
+    , mundoCapacidad = 11
+    }
 
 -- El objetivo es llegar a la azotea
 mundoMetaSinRequisito :: Mundo
-mundoMetaSinRequisito = undefined
+mundoMetaSinRequisito = Mundo
+    { mundoTitulo    = "Edificio Abandonado - Meta sin requisito"
+    , mundoInicio    = IdSala "calle"
+    , mundoMeta      = Llegar (IdSala "azotea")
+    , mundoSalas     = salasPrueba
+    , mundoObjetos   = objetosPrueba
+    , mundoCapacidad = 7
+    }
 
 
 
 -- Salas:
+salasPrueba :: Map.Map IdSala [Sala]
+salasPrueba = Map.fromList
+    [ (salaId s, [s])
+    | s <-  [ salaCalle
+            , salaPb
+            , salaPiso1
+            , salaApto1a
+            , salaApto1b
+            , salaPiso2
+            , salaApto2a
+            , salaApto2b
+            , salaAzotea
+            ]
+    ]
+
 salaCalle :: Sala
 salaCalle = Sala
     { salaId      = IdSala "calle"
@@ -119,7 +148,20 @@ salaAzotea = Sala
     }
 
 
--- Objetos: 
+
+-- Objetos:
+objetosPrueba :: Map.Map IdObjeto [Objeto]
+objetosPrueba = Map.fromList
+    [ (objetoId o, [o])
+    | o <-  [ objetoLlave
+            , objetoLlaveMagnetica
+            , objetoParacaidas
+            , objetoTrebol
+            , objetoCondonUsado
+            , objetoPalanca
+            ]
+    ]
+
 objetoLlave :: Objeto
 objetoLlave = Objeto
     { objetoId      = IdObjeto "llave"
