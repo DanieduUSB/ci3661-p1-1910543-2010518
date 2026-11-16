@@ -75,7 +75,12 @@ reconocerSintaxis texto =
         ([], _) -> Left [V1 1 (CampoAusente "MUNDO")]
 
 reconocerBloque :: String -> ReadS a -> Bloque -> Either ErrorMundo a
-reconocerBloque = undefined
+reconocerBloque tipo reconocedor bloque =
+    case reconocerCompleto reconocedor (textoBloque bloque) of
+        Just valor -> Right valor
+        Nothing ->
+            Left (V1 (numeroBloque bloque)
+                     (FormaClaveValor ("Bloque " ++ tipo ++ " no reconocido")))
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
@@ -146,4 +151,11 @@ agruparPor obtenerClave =
                 mapa
 
 errorBloqueDesconocido :: Bloque -> [ErrorMundo]
-errorBloqueDesconocido = undefined
+errorBloqueDesconocido [] = []
+errorBloqueDesconocido ((numero, linea):_) =
+    case break (== ':') linea of
+        (_, []) ->
+            [V1 numero (FormaClaveValor linea)]
+
+        (nombre, _) ->
+            [V1 numero (ClaveDesconocida nombre)]
