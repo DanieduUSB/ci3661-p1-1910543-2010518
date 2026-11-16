@@ -62,6 +62,11 @@ tests:
     source-dirs:
     - test
     - test/modulos
+    other-modules:
+    - Comandos
+    - Nucleo
+    - Reconocedor
+    - Mundo
     ghc-options:
     - -threaded
     - -rtsopts

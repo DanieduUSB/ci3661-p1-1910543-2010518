@@ -59,7 +59,10 @@ test-suite aventura-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_aventura
+      Comandos
+      Nucleo
+      Reconocedor
+      Mundo
   hs-source-dirs:
       test
       test/modulos
