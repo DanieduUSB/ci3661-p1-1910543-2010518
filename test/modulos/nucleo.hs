@@ -26,6 +26,7 @@ testsNucleo = TestList
     , TestLabel "Victoria sin requisito"            testVictoriaSinRequisito
     , TestLabel "Victoria con requisito"            testVictoriaConRequisito
     , TestLabel "Meta incompleta"                   testMetaIncompleta
+    , TestLabel "Secuencia de comandos ganadora"    testSecuenciaGanadora
     ]
 
 testEstadoInicial :: Test
@@ -189,9 +190,45 @@ testMetaIncompleta = TestCase $ do
     assertEqual "Puede entrar a la azotea" (IdSala "azotea") (salaActual nuevoEstado)
 
 
--- Función auxiliar
+testSecuenciaGanadora :: Test
+testSecuenciaGanadora = TestCase $ do
+    let final = ejecutarSecuencia estadoPrueba
+            [ Tomar (IdObjeto "llave_magnetica")
+            , Ir Norte
+            , Soltar (IdObjeto "llave_magnetica")
+            , Ir Arriba
+            , Ir Arriba
+            , Ir Este
+            , Tomar (IdObjeto "llave")
+            , Ir Oeste
+            , Ir Abajo
+            , Ir Este
+            , Soltar (IdObjeto "llave")
+            , Tomar (IdObjeto "paracaidas")
+            , Ir Oeste
+            , Ir Oeste
+            , Tomar (IdObjeto "palanca")
+            , Ir Este
+            , Ir Arriba
+            , Ir Arriba
+            ]
+    
+    assertEqual "Llega a la azotea" (IdSala "azotea") (salaActual final)
+
+    assertBool "Tiene el paracaídas"
+        (Set.member (IdObjeto "paracaidas") (inventario final))
+    
+    assertBool "La partida terminó" (juegoTerminado final)
+
+
+-- Función auxiliar objetosEnSalaActual
 objetosEnSalaActual :: Estado -> Set.Set IdObjeto
 objetosEnSalaActual estado =
     Map.findWithDefault Set.empty
         (salaActual estado)
         (objetosPorSala estado)
+
+-- Función auxiliar ejecutarSecuencia
+-- Ejecuta una lista de comandos consecutivamente
+ejecutarSecuencia :: Estado -> [Comando] -> Estado
+ejecutarSecuencia = foldl (\estado comando -> snd (ejecutar comando estado))
