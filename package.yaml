@@ -44,6 +44,7 @@ library:
     - Motor.Comandos
     - Motor.Nucleo
     - Motor.Persistencia
+    - Motor.Serializador
 
 executables:
   aventura-exe:
