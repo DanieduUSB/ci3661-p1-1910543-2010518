@@ -100,7 +100,21 @@ ejecutar (Tomar idObj) estado
         inv = inventario estado
 
 
-ejecutar (Soltar idObj) estado = undefined
+ejecutar (Soltar idObj) estado
+    | not (Set.member idObj inv) =
+        ([show idObj ++ " no se encuentra en el inventario"], estado)
+    | otherwise =
+        (["Soltaste " ++ show idObj]
+        , estado
+            { inventario = Set.delete idObj inv
+            , objetosPorSala = Map.adjust
+                (Set.insert idObj)
+                (salaActual estado)
+                (objetosPorSala estado)
+            }
+        )
+    where
+        inv = inventario estado
 
 
 ejecutar (Examinar idObj) estado
