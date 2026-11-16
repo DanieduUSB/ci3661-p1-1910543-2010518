@@ -1,6 +1,7 @@
 module Motor.Tipos
     ( Mundo(..)
     , Sala (..)
+    , Salida(..)
     , Objeto(..)
     , Direccion(..)
     , Meta(..)
@@ -30,11 +31,12 @@ instance Show IdSala where
 -- Mundo
 
 data Mundo = Mundo
-    { mundoTitulo  :: String
-    , mundoInicio  :: IdSala
-    , mundoMeta    :: Meta
-    , mundoSalas   :: Map.Map IdSala [Sala]
-    , mundoObjetos :: Map.Map IdObjeto [Objeto]
+    { mundoTitulo       :: String
+    , mundoInicio       :: IdSala
+    , mundoMeta         :: Meta
+    , mundoSalas        :: Map.Map IdSala [Sala]
+    , mundoObjetos      :: Map.Map IdObjeto [Objeto]
+    , mundoCapacidad    :: Int
     } deriving (Eq, Show)
 
 -- Sala
@@ -60,7 +62,15 @@ data Salida = Salida
     { salidaDireccion :: Direccion
     , salidaDestino   :: IdSala
     , salidaRequisito :: Maybe IdObjeto
-    } deriving (Eq, Ord, Show)
+    } deriving (Eq, Ord)
+
+instance Show Salida where
+    show s = show (salidaDireccion s)
+                ++ " -> "
+                ++ show (salidaDestino s)
+                ++ case (salidaRequisito s) of
+                    Just idObj  -> " (Requiere " ++ show idObj ++ ")"
+                    _           -> ""
 
 -- Direcciones
 
