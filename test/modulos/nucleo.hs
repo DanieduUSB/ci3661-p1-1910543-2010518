@@ -27,6 +27,7 @@ testsNucleo = TestList
     , TestLabel "Victoria con requisito"            testVictoriaConRequisito
     , TestLabel "Meta incompleta"                   testMetaIncompleta
     , TestLabel "Secuencia de comandos ganadora"    testSecuenciaGanadora
+    , TestLabel "Salida bloqueada y recuperación"   testSalidaBloqueadaRecuperacion
     ]
 
 testEstadoInicial :: Test
@@ -219,6 +220,28 @@ testSecuenciaGanadora = TestCase $ do
         (Set.member (IdObjeto "paracaidas") (inventario final))
     
     assertBool "La partida terminó" (juegoTerminado final)
+
+
+testSalidaBloqueadaRecuperacion :: Test
+testSalidaBloqueadaRecuperacion = TestCase $ do
+    let bloqueado = ejecutarSecuencia estadoPrueba [Ir Norte]
+
+        final = ejecutarSecuencia bloqueado
+            [ Tomar (IdObjeto "llave_magnetica")
+            , Ir Norte
+            ]
+
+    assertEqual "No puede entrar sin la llave magnética"
+        (IdSala "calle")
+        (salaActual bloqueado)
+
+    assertEqual "Puede entrar después de recoger la llave magnética"
+        (IdSala "pb")
+        (salaActual final)
+
+    assertBool "La salida queda desbloqueada"
+        (Set.member (IdSala "calle", Norte)
+            (salidasDesbloqueadas final))
 
 
 -- Función auxiliar objetosEnSalaActual
