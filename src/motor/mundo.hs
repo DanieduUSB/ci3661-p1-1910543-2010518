@@ -231,34 +231,15 @@ validarV9 mundo
 validarV10 :: Mundo -> [ErrorMundo]
 validarV10 mundo =
     [ V10 objeto
-    | objeto <- Set.toList objetosNecesarios
+    | objeto <- Set.toList (objetosNecesarios mundo)
     , Map.member objeto (mundoObjetos mundo)
     , Set.notMember objeto objetosColocados
     ]
     where
-        salas = mundoSalas mundo
-
-        requisitos =
-            [ objeto
-            | definiciones <- Map.elems salas
-            , sala <- definiciones
-            , salidas <- Map.elems (salaSalidas sala)
-            , salida <- salidas
-            , Just objeto <- [salidaRequisito salida]
-            ]
-
-        objetosMeta =
-            case mundoMeta mundo of
-                Llegar _ -> []
-                Llevar objeto _ -> [objeto]
-
-        objetosNecesarios =
-            Set.fromList (requisitos ++ objetosMeta)
-
         objetosColocados =
             Set.fromList
                 [ objeto
-                | definiciones <- Map.elems salas
+                | definiciones <- Map.elems (mundoSalas mundo)
                 , sala <- definiciones
                 , objeto <- salaObjetos sala
                 ]
@@ -556,11 +537,14 @@ errorSalida :: String -> String -> ErrorV1
 errorSalida linea valor =
     case words valor of
         (dir:_)
-            | dir `notElem`
-                ["norte", "sur", "este", "oeste", "arriba", "abajo"]
+            | all (`elem` "abcdefghijklmnopqrstuvwxyzáéíóúñü0123456789_") dir
+            , dir `notElem` direcciones
                 -> DireccionInexistente dir
 
         _ -> SalidaMalFormada linea
+    where
+        direcciones =
+            ["norte", "sur", "este", "oeste", "arriba", "abajo"]
 
 -- Detecta separadores vacíos o repetidos
 erroresSeparadores :: String -> [ErrorMundo]
