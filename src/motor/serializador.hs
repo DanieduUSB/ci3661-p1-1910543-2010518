@@ -84,13 +84,16 @@ deserializarEstado mundo contenido = do
     salidasGuardadas <- mapM leerSalida lineasSalidas
 
     let inventarioNuevo = Set.fromList inventarioLista
-        objetosNuevos = Map.fromList salasGuardadas
+
+        objetosNuevos = Map.fromList
+            [ (idSala, Set.fromList objetos) | (idSala, objetos) <- salasGuardadas ]
+
         salidasNuevas = Set.fromList salidasGuardadas
 
         idsSalas = Set.fromList (Map.keys (mundoSalas mundo))
         idsObjetos = Set.fromList (Map.keys (mundoObjetos mundo))
 
-        objetosEnSalas = concatMap (Set.toList . snd) salasGuardadas
+        objetosEnSalas = concatMap snd salasGuardadas
 
         todosLosObjetos = inventarioLista ++ objetosEnSalas
 
@@ -155,8 +158,7 @@ deserializarEstado mundo contenido = do
         leerSala linea = do
             (identificador, objetos) <- leerPar linea
             lista <- separarLista objetos
-            Right (IdSala identificador,
-                   Set.fromList (map IdObjeto lista))
+            Right (IdSala identificador, map IdObjeto lista)
 
         leerSalida linea = do
             (identificador, direccion) <- leerPar linea
