@@ -11,6 +11,7 @@ module Motor.Reconocedor
     , lineaSalida
     , lineaCapacidad
     , lineaPeso
+    , reconocerCompleto
 ) where
 
 import Motor.Tipos

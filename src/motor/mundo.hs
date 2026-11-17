@@ -65,6 +65,7 @@ leerMundo texto =
                                     ++ validarV9 mundo
                                     ++ validarV10 mundo
                                     ++ validarPesoIndividual mundo
+                                    ++ validarCapacidad mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -271,6 +272,21 @@ validarPesoIndividual mundo =
     ]
     where
         capacidad = mundoCapacidad mundo
+
+validarCapacidad :: Mundo -> [ErrorMundo]
+validarCapacidad mundo
+    | hayObjetosInexistentes = []
+    | capacidad < requerida =
+        [CapacidadInsuficiente capacidad requerida]
+    | otherwise = []
+    where
+        capacidad = mundoCapacidad mundo
+        requerida = capacidadRequerida mundo
+
+        hayObjetosInexistentes =
+            any
+                (\objeto -> Map.notMember objeto (mundoObjetos mundo))
+                (Set.toList (objetosNecesarios mundo))
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
@@ -500,6 +516,41 @@ salasAlcanzables mundo =
 
                 in recorrer (destinos ++ pendientes)
                            (Set.insert actual visitadas)
+
+objetosNecesarios :: Mundo -> Set.Set IdObjeto
+objetosNecesarios mundo =
+    Set.fromList (requisitos ++ objetoMeta)
+    where
+        requisitos =
+            [ objeto
+            | definiciones <- Map.elems (mundoSalas mundo)
+            , sala <- definiciones
+            , salidas <- Map.elems (salaSalidas sala)
+            , salida <- salidas
+            , Just objeto <- [salidaRequisito salida]
+            ]
+
+        objetoMeta =
+            case mundoMeta mundo of
+                Llegar _ -> []
+                Llevar objeto _ -> [objeto]
+
+capacidadRequerida :: Mundo -> Int
+capacidadRequerida mundo =
+    max pesoMaximo pesoNecesarios
+    where
+        objetos =
+            concat (Map.elems (mundoObjetos mundo))
+
+        pesoMaximo =
+            maximum (0 : map objetoPeso objetos)
+
+        pesoNecesarios =
+            sum
+                [ objetoPeso objeto
+                | idObj <- Set.toList (objetosNecesarios mundo)
+                , Just (objeto:_) <- [Map.lookup idObj (mundoObjetos mundo)]
+                ]
 
 errorSalida :: String -> String -> ErrorV1
 errorSalida linea valor =
