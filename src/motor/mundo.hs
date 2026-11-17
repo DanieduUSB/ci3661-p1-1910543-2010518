@@ -2,14 +2,13 @@ module Motor.Mundo
     ( leerMundo
     , prepararLineas
     , separarBloques
-    , reconocerSintaxis
     ) where
 
 import Motor.Tipos
 import Motor.Reconocedor
 
 import Data.Char (isSpace)
-import Data.List (isPrefixOf, dropWhileEnd)
+import Data.List (isPrefixOf, dropWhileEnd, sortOn)
 import Data.Either (partitionEithers)
 import qualified Data.Map.Strict as Map
 
@@ -20,7 +19,44 @@ data TipoBloque = TCabecera | TObjeto | TSala
     deriving (Eq, Show)
 
 leerMundo :: String -> Either [ErrorMundo] Mundo
-leerMundo = undefined
+leerMundo texto =
+    case separarBloques texto of
+
+        [] ->
+            Left [V1 1 (CampoAusente "MUNDO")]
+
+        (cabecera:resto) ->
+            let erroresCabecera =
+                    validarBloque TCabecera cabecera
+
+                (erroresOtros, salas, objetos) =
+                    foldr procesarBloque ([], [], []) resto
+
+                errores =
+                    sortOn numeroError
+                        ( erroresCabecera
+                        ++ erroresOtros
+                        ++ erroresSeparadores texto
+                        )
+
+            in if not (null errores)
+               then Left errores
+               else
+                   case reconocerCompleto leerCabecera (textoBloque cabecera) of
+
+                       Nothing ->
+                           Left [V1 (numeroBloque cabecera)
+                                    (FormaClaveValor "Cabecera no reconocida")]
+
+                       Just mundo ->
+                           Right mundo
+                               { mundoSalas = agruparPor salaId salas
+                               , mundoObjetos = agruparPor objetoId objetos
+                               }
+
+    where
+        numeroError (V1 numero _) = numero
+        numeroError _ = maxBound
 
 -- Función recibe un bloque y lo procesa
 procesarBloque
@@ -276,3 +312,29 @@ errorSalida linea valor =
                 -> DireccionInexistente dir
 
         _ -> SalidaMalFormada linea
+
+-- Detecta separadores vacíos o repetidos
+erroresSeparadores :: String -> [ErrorMundo]
+erroresSeparadores texto =
+    inicio ++ consecutivos ++ final
+    where
+        ls = prepararLineas texto
+
+        inicio =
+            case ls of
+                ((n, "--"):_) ->
+                    [V1 n (FormaClaveValor "Separador al inicio")]
+                _ -> []
+
+        consecutivos =
+            [ V1 n (FormaClaveValor "Bloque vacío entre separadores")
+            | ((_, a), (n, b)) <- zip ls (drop 1 ls)
+            , a == "--"
+            , b == "--"
+            ]
+
+        final =
+            case reverse ls of
+                ((n, "--"):_) ->
+                    [V1 n (FormaClaveValor "Separador al final")]
+                _ -> []
