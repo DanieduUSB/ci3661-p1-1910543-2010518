@@ -1,6 +1,8 @@
 module Serializador (testsSerializador) where
 
 import Test.HUnit
+import qualified Data.Set as Set
+
 import Motor.Tipos
 import Motor.Serializador
 import Datos.EstadoPrueba
@@ -11,6 +13,9 @@ testsSerializador = TestList
     , TestLabel "Mundo incorrecto"          testMundoIncorrecto
     , TestLabel "Contenido invalido"        testContenidoInvalido
     , TestLabel "Sala inexistente"          testSalaInexistente
+    , TestLabel "Objeto duplicado"          testObjetoDuplicado
+    , TestLabel "Objeto inexistente"        testObjetoInexistente
+    , TestLabel "Salida inexistente"        testSalidaInexistente
     ]
 
 -- Serializar y deserializar conserva el estado
@@ -58,4 +63,57 @@ testSalaInexistente = TestCase $ do
 
     assertEqual "Debe rechazar una sala inexistente"
         (Left "La sala actual no existe")
+        resultado
+
+
+-- Rechazar objetos duplicados en una misma sala
+testObjetoDuplicado :: Test
+testObjetoDuplicado = TestCase $ do
+    let texto = serializarEstado estadoPrueba
+
+        textoInvalido = unlines
+            [ if linea == "calle: llave_magnetica"
+                then "calle: llave_magnetica,llave_magnetica"
+                else linea
+            | linea <- lines texto
+            ]
+
+        resultado = deserializarEstado
+            (estadoMundo estadoPrueba)
+            textoInvalido
+
+    assertEqual "Debe rechazar objetos duplicados"
+        (Left "Hay objetos duplicados en la partida")
+        resultado
+
+
+-- Rechazar objetos inexistentes
+testObjetoInexistente :: Test
+testObjetoInexistente = TestCase $ do
+    let estadoInvalido = estadoPrueba
+            { inventario = Set.singleton (IdObjeto "objeto_fantasma") }
+
+        resultado = deserializarEstado
+            (estadoMundo estadoPrueba)
+            (serializarEstado estadoInvalido)
+
+    assertEqual "Debe rechazar objetos inexistentes"
+        (Left "La partida contiene objetos inexistentes")
+        resultado
+
+
+-- Rechazar salidas inexistentes
+testSalidaInexistente :: Test
+testSalidaInexistente = TestCase $ do
+    let estadoInvalido = estadoPrueba
+            { salidasDesbloqueadas =
+                Set.singleton (IdSala "calle", Oeste)
+            }
+
+        resultado = deserializarEstado
+            (estadoMundo estadoPrueba)
+            (serializarEstado estadoInvalido)
+
+    assertEqual "Debe rechazar salidas inexistentes"
+        (Left "La partida contiene salidas inexistentes")
         resultado
