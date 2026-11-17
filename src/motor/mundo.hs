@@ -63,6 +63,7 @@ leerMundo texto =
                                     ++ validarV7 mundo
                                     ++ validarV8 mundo
                                     ++ validarV9 mundo
+                                    ++ validarV10 mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -224,6 +225,41 @@ validarV9 mundo
         | sala <- Map.keys (mundoSalas mundo)
         , Set.notMember sala (salasAlcanzables mundo)
         ]
+
+validarV10 :: Mundo -> [ErrorMundo]
+validarV10 mundo =
+    [ V10 objeto
+    | objeto <- Set.toList objetosNecesarios
+    , Map.member objeto (mundoObjetos mundo)
+    , Set.notMember objeto objetosColocados
+    ]
+    where
+        salas = mundoSalas mundo
+
+        requisitos =
+            [ objeto
+            | definiciones <- Map.elems salas
+            , sala <- definiciones
+            , salidas <- Map.elems (salaSalidas sala)
+            , salida <- salidas
+            , Just objeto <- [salidaRequisito salida]
+            ]
+
+        objetosMeta =
+            case mundoMeta mundo of
+                Llegar _ -> []
+                Llevar objeto _ -> [objeto]
+
+        objetosNecesarios =
+            Set.fromList (requisitos ++ objetosMeta)
+
+        objetosColocados =
+            Set.fromList
+                [ objeto
+                | definiciones <- Map.elems salas
+                , sala <- definiciones
+                , objeto <- salaObjetos sala
+                ]
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
