@@ -256,6 +256,7 @@ validarPesoIndividual mundo =
 
 validarCapacidad :: Mundo -> [ErrorMundo]
 validarCapacidad mundo
+    | not (null (validarPesoIndividual mundo)) = []
     | hayObjetosInexistentes = []
     | capacidad < requerida =
         [CapacidadInsuficiente capacidad requerida]

@@ -218,7 +218,7 @@ instance Show ErrorMundo where
         = "Error: V9 - La sala " ++ show sala
         ++ " no es alcanzable desde la sala inicial"
     show (V10 objeto)
-        = "Error: El objeto necesario " ++ show objeto
+        = "Error: V10 - El objeto necesario " ++ show objeto
         ++ " no esta colocado en ninguna sala"
     show (PesoExcesivo objeto peso capacidad)
         = "Error: Peso - El objeto " ++ show objeto
