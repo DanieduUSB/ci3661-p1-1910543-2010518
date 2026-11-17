@@ -54,7 +54,9 @@ leerMundo texto =
                                     }
 
                                 erroresSemanticos =
-                                    validarV2 mundo ++ validarV3 mundo
+                                    validarV2 mundo
+                                    ++ validarV3 mundo
+                                    ++ validarV4 mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -131,6 +133,17 @@ validarV3 mundo =
     , salidas <- Map.elems (salaSalidas sala)
     , salida <- salidas
     , Map.notMember (salidaDestino salida) (mundoSalas mundo)
+    ]
+
+validarV4 :: Mundo -> [ErrorMundo]
+validarV4 mundo =
+    [ V4 (salaId sala) objeto
+    | definiciones <- Map.elems (mundoSalas mundo)
+    , sala <- definiciones
+    , salidas <- Map.elems (salaSalidas sala)
+    , salida <- salidas
+    , Just objeto <- [salidaRequisito salida]
+    , Map.notMember objeto (mundoObjetos mundo)
     ]
 
 numeroBloque :: Bloque -> Int
