@@ -8,8 +8,7 @@ import Motor.Tipos
 import Motor.Reconocedor
 
 import Data.Char (isSpace)
-import Data.List (isPrefixOf, dropWhileEnd, sortOn)
-import Data.Either (partitionEithers)
+import Data.List (dropWhileEnd, sortOn)
 import qualified Data.Map.Strict as Map
 
 -- Tipos de dato auxiliares
@@ -40,19 +39,25 @@ leerMundo texto =
                         )
 
             in if not (null errores)
-               then Left errores
-               else
-                   case reconocerCompleto leerCabecera (textoBloque cabecera) of
+                then Left errores
+                else
+                    case reconocerCompleto leerCabecera (textoBloque cabecera) of
 
-                       Nothing ->
+                        Nothing ->
                            Left [V1 (numeroBloque cabecera)
                                     (FormaClaveValor "Cabecera no reconocida")]
 
-                       Just mundo ->
-                           Right mundo
-                               { mundoSalas = agruparPor salaId salas
-                               , mundoObjetos = agruparPor objetoId objetos
-                               }
+                        Just mundoCabecera ->
+                            let mundo = mundoCabecera
+                                    { mundoSalas = agruparPor salaId salas
+                                    , mundoObjetos = agruparPor objetoId objetos
+                                    }
+
+                                erroresV2 = validarV2 mundo
+
+                            in case erroresV2 of
+                                [] -> Right mundo
+                                _  -> Left erroresV2
 
     where
         numeroError (V1 numero _) = numero
@@ -100,6 +105,22 @@ procesarBloque bloque (errores, salas, objetos) =
         errorReconocimiento nombre =
             V1 (numeroBloque bloque)
                (FormaClaveValor ("Bloque " ++ nombre ++ " no reconocido"))
+
+validarV2 :: Mundo -> [ErrorMundo]
+validarV2 mundo =
+    erroresSalas ++ erroresObjetos
+    where
+        erroresSalas =
+            [ V2a identificador
+            | (identificador, salas) <- Map.toList (mundoSalas mundo)
+            , length salas > 1
+            ]
+
+        erroresObjetos =
+            [ V2b identificador
+            | (identificador, objetos) <- Map.toList (mundoObjetos mundo)
+            , length objetos > 1
+            ]
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
