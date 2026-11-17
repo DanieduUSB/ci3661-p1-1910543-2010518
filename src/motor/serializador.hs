@@ -50,7 +50,7 @@ deserializarEstado mundo contenido = do
                 let (salas, resto1) = break (== "desbloqueadas:") resto
 
                 case resto1 of
-                    [] -> Left "Falta la seccion 'desbloqueadas'"
+                    [] -> Left "Falta la seccion desbloqueadas"
                     (_:resto2) -> do
                         let (salidas, resto3) =
                                 break (isPrefixOf "terminado: ") resto2
@@ -61,18 +61,18 @@ deserializarEstado mundo contenido = do
                                 finalizado <- case valor of
                                     "True"  -> Right True
                                     "False" -> Right False
-                                    _       -> Left "Valor de terminado invalido."
+                                    _       -> Left "Valor de terminado invalido"
 
                                 Right (titulo, idActual, idsInventario,
                                        salas, salidas, finalizado)
 
-                            _ -> Left "Formato de partida invalido."
+                            _ -> Left "Formato de partida invalido"
 
-            _ -> Left "Formato de partida invalido."
+            _ -> Left "Formato de partida invalido"
 
     -- Comprobar que corresponde al mismo mundo
     if titulo /= mundoTitulo mundo
-        then Left "La partida pertenece a otro mundo."
+        then Left "La partida pertenece a otro mundo"
         else Right ()
 
     -- Reconstruir los identificadores
@@ -182,4 +182,4 @@ deserializarEstado mundo contenido = do
         pesoObjeto identificador =
             case Map.lookup identificador (mundoObjetos mundo) of
                 Just (obj:_) -> Right (objetoPeso obj)
-                _ -> Left "No se pudo obtener el peso de un objeto."
+                _ -> Left "No se pudo obtener el peso de un objeto"

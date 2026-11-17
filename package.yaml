@@ -68,6 +68,7 @@ tests:
     - Nucleo
     - Reconocedor
     - Mundo
+    - Serializador
     - Datos.MundoPrueba
     - Datos.EstadoPrueba
     ghc-options:

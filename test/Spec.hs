@@ -7,6 +7,7 @@ import Comandos (testsComandos)
 import Nucleo (testsNucleo)
 import Reconocedor (testsReconocedor)
 import Mundo (testsMundo)
+import Serializador (testsSerializador)
 
 
 main :: IO()
@@ -16,6 +17,7 @@ main = do
         , TestLabel "Nucleo"        testsNucleo
         , TestLabel "Reconocedor"   testsReconocedor
         , TestLabel "Mundo"         testsMundo
+        , TestLabel "Serializador"  testsSerializador
         ]
     
     if errors resultado + failures resultado > 0
