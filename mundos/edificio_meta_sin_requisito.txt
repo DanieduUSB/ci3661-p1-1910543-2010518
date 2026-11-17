@@ -1,0 +1,76 @@
+MUNDO: Edificio Abandonado - Meta sin requisito
+INICIO: calle
+META: llegar a azotea
+CAPACIDAD: 7
+--
+OBJETO: llave
+DESC: Empieza por '1_', lo demás se borró
+PESO: 2
+--
+OBJETO: llave_magnetica
+DESC: Una llave para una cerradura magnética. Me pregunto si estará codificada para algún edificio cercano...
+PESO: 2
+--
+OBJETO: paracaidas
+DESC: Parece funcional, y es un modelo arrecho que se abre rápido en caídas cortas, me encantaría probarlo
+PESO: 4
+--
+OBJETO: trebol_cuatro_hojas
+DESC: Parece que mi suerte cambiará, Willie Colón tenía razón
+PESO: 1
+--
+OBJETO: condon_usado
+DESC: Que asco
+PESO: 1
+--
+OBJETO: palanca
+DESC: Si necesito abrir algo que esté trancado me sería útil
+PESO: 3
+--
+SALA: calle
+DESC: Estás en la calle, frente a un edificio de dos pisos. Se ve desolada la calle, no hay ni carros alrededor
+SALIDA: norte -> pb requiere llave_magnetica
+OBJETO: llave_magnetica
+--
+SALA: pb
+DESC: Estás en la planta baja del edificio. No parece que lo limpien muy seguido.Hay unas escaleras.
+SALIDA: sur -> calle requiere llave_magnetica
+SALIDA: arriba -> piso_1
+--
+SALA: piso_1
+DESC: Estás en el primer piso. Hay dos apartamentos y unas escaleras.
+SALIDA: abajo -> pb
+SALIDA: arriba -> piso_2
+SALIDA: este -> apto_1_a requiere llave
+SALIDA: oeste -> apto_1_b
+--
+SALA: apto_1_a
+DESC: Un apartamento desordenado. Hay un paracaídas en el mueble.
+SALIDA: oeste -> piso_1
+OBJETO: paracaidas
+--
+SALA: apto_1_b
+DESC: Un apartamento en remodelación. Hay herramientas por todas partes.
+SALIDA: este -> piso_1
+OBJETO: palanca
+--
+SALA: piso_2
+DESC: Estás en el segundo piso. Hay dos apartamentos y una puerta hacia la azotea.
+SALIDA: abajo -> piso_1
+SALIDA: arriba -> azotea requiere palanca
+SALIDA: este -> apto_2_a
+SALIDA: oeste -> apto_2_b
+--
+SALA: apto_2_a
+DESC: Un apartamento aparentemente abandonado. Hay una llave en el suelo.
+SALIDA: oeste -> piso_2
+OBJETO: llave
+--
+SALA: apto_2_b
+DESC: Un apartamento lleno de plantas, ¿Tal vez planten perejil, o cilantro?Nunca se distinguir entre ambas...
+OBJETO: trebol_cuatro_hojas
+--
+SALA: azotea
+DESC: Estás en la azotea. Hay una vista muy... Meh
+SALIDA: abajo -> piso_2
+OBJETO: condon_usado
