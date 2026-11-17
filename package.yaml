@@ -37,7 +37,6 @@ ghc-options:
 library:
   source-dirs: src
   exposed-modules:
-    - Lib
     - Motor.Tipos
     - Motor.Reconocedor
     - Motor.Mundo
