@@ -2,6 +2,7 @@ module Serializador (testsSerializador) where
 
 import Test.HUnit
 import qualified Data.Set as Set
+import qualified Data.Map.Strict as Map
 
 import Motor.Tipos
 import Motor.Serializador
@@ -16,6 +17,9 @@ testsSerializador = TestList
     , TestLabel "Objeto duplicado"          testObjetoDuplicado
     , TestLabel "Objeto inexistente"        testObjetoInexistente
     , TestLabel "Salida inexistente"        testSalidaInexistente
+    , TestLabel "Objeto desaparecido"       testObjetoDesaparecido
+    , TestLabel "Sala guardada inexistente" testSalaGuardadaInexistente
+    , TestLabel "Inventario excedido"       testInventarioExcedido
     ]
 
 -- Serializar y deserializar conserva el estado
@@ -116,4 +120,72 @@ testSalidaInexistente = TestCase $ do
 
     assertEqual "Debe rechazar salidas inexistentes"
         (Left "La partida contiene salidas inexistentes")
+        resultado
+
+
+-- Rechazar objetos desaparecidos
+testObjetoDesaparecido :: Test
+testObjetoDesaparecido = TestCase $ do
+    let estadoInvalido = estadoPrueba
+            { objetosPorSala = Map.adjust
+                (Set.delete (IdObjeto "llave_magnetica"))
+                (IdSala "calle")
+                (objetosPorSala estadoPrueba)
+            }
+
+        resultado = deserializarEstado
+            (estadoMundo estadoPrueba)
+            (serializarEstado estadoInvalido)
+
+    assertEqual "Debe rechazar objetos desaparecidos"
+        (Left "Faltan objetos en la partida")
+        resultado
+
+
+-- Rechazar salas inexistentes
+testSalaGuardadaInexistente :: Test
+testSalaGuardadaInexistente = TestCase $ do
+    let texto = serializarEstado estadoPrueba
+
+        textoInvalido = unlines
+            [ if linea == "calle: llave_magnetica"
+                then "sala_fantasma: llave_magnetica"
+                else linea
+            | linea <- lines texto
+            ]
+
+        resultado = deserializarEstado
+            (estadoMundo estadoPrueba)
+            textoInvalido
+
+    assertEqual "Debe rechazar salas inexistentes"
+        (Left "La partida contiene salas inexistentes")
+        resultado
+
+
+-- Rechazar inventarios que exceden la capacidad
+testInventarioExcedido :: Test
+testInventarioExcedido = TestCase $ do
+    let mundo = (estadoMundo estadoPrueba)
+            { mundoCapacidad = 3 }
+
+        objetosInventario = Set.fromList
+            [ IdObjeto "llave_magnetica"
+            , IdObjeto "paracaidas"
+            ]
+
+        estadoInvalido = estadoPrueba
+            { estadoMundo = mundo
+            , inventario = objetosInventario
+            , objetosPorSala = Map.map
+                (\objetos -> Set.difference objetos objetosInventario)
+                (objetosPorSala estadoPrueba)
+            }
+
+        resultado = deserializarEstado
+            mundo
+            (serializarEstado estadoInvalido)
+
+    assertEqual "Debe rechazar inventarios que superen la capacidad"
+        (Left "El inventario supera la capacidad")
         resultado
