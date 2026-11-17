@@ -59,6 +59,7 @@ leerMundo texto =
                                     ++ validarV4 mundo
                                     ++ validarV5 mundo
                                     ++ validarV6 mundo
+                                    ++ validarV7 mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -165,6 +166,21 @@ validarV6 mundo =
     , objeto <- salaObjetos sala
     , Map.notMember objeto (mundoObjetos mundo)
     ]
+
+validarV7 :: Mundo -> [ErrorMundo]
+validarV7 mundo =
+    [ V7 objeto
+    | (objeto, cantidad) <- Map.toList apariciones
+    , cantidad > 1
+    ]
+    where
+        apariciones =
+            Map.fromListWith (+)
+                [ (objeto, 1 :: Int)
+                | definiciones <- Map.elems (mundoSalas mundo)
+                , sala <- definiciones
+                , objeto <- salaObjetos sala
+                ]
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
