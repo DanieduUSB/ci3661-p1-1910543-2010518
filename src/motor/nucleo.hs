@@ -164,10 +164,10 @@ ejecutar Inventario estado =
             | otherwise     = map (\(IdObjeto str) -> str) (Set.toList inv)
 
 
-ejecutar (Guardar path) estado = undefined
+ejecutar (Guardar _) _ = undefined
 
 
-ejecutar (Cargar path) estado = undefined
+ejecutar (Cargar _) _ = undefined
 
 
 ejecutar Ayuda estado =
