@@ -10,6 +10,7 @@ import Motor.Reconocedor
 import Data.Char (isSpace)
 import Data.List (dropWhileEnd, sortOn)
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 
 -- Tipos de dato auxiliares
 type LineaNumerada = (Int, String)
@@ -61,6 +62,7 @@ leerMundo texto =
                                     ++ validarV6 mundo
                                     ++ validarV7 mundo
                                     ++ validarV8 mundo
+                                    ++ validarV9 mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -213,6 +215,15 @@ validarV8 mundo =
                     [ V8c objeto
                     | Map.notMember objeto objetos
                     ]
+
+validarV9 :: Mundo -> [ErrorMundo]
+validarV9 mundo
+    | Map.notMember (mundoInicio mundo) (mundoSalas mundo) = []
+    | otherwise =
+        [ V9 sala
+        | sala <- Map.keys (mundoSalas mundo)
+        , Set.notMember sala (salasAlcanzables mundo)
+        ]
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
@@ -415,6 +426,33 @@ tipoBloque ((_, linea):_) =
         _                  -> Nothing
 
 tipoBloque [] = Nothing
+
+salasAlcanzables :: Mundo -> Set.Set IdSala
+salasAlcanzables mundo =
+    recorrer [mundoInicio mundo] Set.empty
+    where
+        salas = mundoSalas mundo
+
+        recorrer [] visitadas = visitadas
+
+        recorrer (actual:pendientes) visitadas
+            | Set.member actual visitadas =
+                recorrer pendientes visitadas
+
+            | otherwise =
+                let definiciones =
+                        Map.findWithDefault [] actual salas
+
+                    destinos =
+                        [ salidaDestino salida
+                        | sala <- definiciones
+                        , salidas <- Map.elems (salaSalidas sala)
+                        , salida <- salidas
+                        , Map.member (salidaDestino salida) salas
+                        ]
+
+                in recorrer (destinos ++ pendientes)
+                           (Set.insert actual visitadas)
 
 errorSalida :: String -> String -> ErrorV1
 errorSalida linea valor =
