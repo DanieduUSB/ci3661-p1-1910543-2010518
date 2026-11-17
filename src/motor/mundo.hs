@@ -53,11 +53,12 @@ leerMundo texto =
                                     , mundoObjetos = agruparPor objetoId objetos
                                     }
 
-                                erroresV2 = validarV2 mundo
+                                erroresSemanticos =
+                                    validarV2 mundo ++ validarV3 mundo
 
-                            in case erroresV2 of
+                            in case erroresSemanticos of
                                 [] -> Right mundo
-                                _  -> Left erroresV2
+                                _  -> Left erroresSemanticos
 
     where
         numeroError (V1 numero _) = numero
@@ -121,6 +122,16 @@ validarV2 mundo =
             | (identificador, objetos) <- Map.toList (mundoObjetos mundo)
             , length objetos > 1
             ]
+
+validarV3 :: Mundo -> [ErrorMundo]
+validarV3 mundo =
+    [ V3 (salaId sala) (salidaDestino salida)
+    | definiciones <- Map.elems (mundoSalas mundo)
+    , sala <- definiciones
+    , salidas <- Map.elems (salaSalidas sala)
+    , salida <- salidas
+    , Map.notMember (salidaDestino salida) (mundoSalas mundo)
+    ]
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
