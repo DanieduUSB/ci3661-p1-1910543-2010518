@@ -104,12 +104,16 @@ deserializarEstado mundo contenido = do
         then Left "La sala actual no existe"
     else if length salasGuardadas /= Map.size objetosNuevos
         then Left "Hay salas repetidas"
+    else if any (`Set.notMember` idsSalas) (Map.keys objetosNuevos)
+        then Left "La partida contiene salas inexistentes"
     else if Set.fromList (Map.keys objetosNuevos) /= idsSalas
         then Left "Las salas guardadas no coinciden con las del mundo"
     else if any (`Set.notMember` idsObjetos) todosLosObjetos
         then Left "La partida contiene objetos inexistentes"
     else if length todosLosObjetos /= Set.size (Set.fromList todosLosObjetos)
         then Left "Hay objetos duplicados en la partida"
+    else if Set.fromList todosLosObjetos /= idsObjetos
+        then Left "Faltan objetos en la partida"
     else if not salidasValidas
         then Left "La partida contiene salidas inexistentes"
     else if length salidasGuardadas /= Set.size salidasNuevas
