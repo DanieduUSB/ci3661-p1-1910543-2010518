@@ -60,6 +60,7 @@ leerMundo texto =
                                     ++ validarV5 mundo
                                     ++ validarV6 mundo
                                     ++ validarV7 mundo
+                                    ++ validarV8 mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -181,6 +182,37 @@ validarV7 mundo =
                 , sala <- definiciones
                 , objeto <- salaObjetos sala
                 ]
+
+validarV8 :: Mundo -> [ErrorMundo]
+validarV8 mundo =
+    erroresInicio ++ erroresMeta
+    where
+        salas = mundoSalas mundo
+        objetos = mundoObjetos mundo
+
+        inicio = mundoInicio mundo
+
+        erroresInicio =
+            [ V8a inicio
+            | Map.notMember inicio salas
+            ]
+
+        erroresMeta =
+            case mundoMeta mundo of
+
+                Llegar destino ->
+                    [ V8b destino
+                    | Map.notMember destino salas
+                    ]
+
+                Llevar objeto destino ->
+                    [ V8b destino
+                    | Map.notMember destino salas
+                    ]
+                    ++
+                    [ V8c objeto
+                    | Map.notMember objeto objetos
+                    ]
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
