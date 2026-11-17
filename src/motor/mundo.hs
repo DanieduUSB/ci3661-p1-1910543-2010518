@@ -16,12 +16,54 @@ import qualified Data.Map.Strict as Map
 -- Tipos de dato auxiliares
 type LineaNumerada = (Int, String)
 type Bloque = [LineaNumerada]
+data TipoBloque = TCabecera | TObjeto | TSala
+    deriving (Eq, Show)
 
 leerMundo :: String -> Either [ErrorMundo] Mundo
 leerMundo = undefined
 
-reconocerSintaxis :: String -> Either [ErrorMundo] Mundo
-reconocerSintaxis = undefined
+-- Función recibe un bloque y lo procesa
+procesarBloque
+    :: Bloque
+    -> ([ErrorMundo], [Sala], [Objeto])
+    -> ([ErrorMundo], [Sala], [Objeto])
+
+procesarBloque [] acumulador = acumulador
+
+procesarBloque bloque (errores, salas, objetos) =
+    case tipoBloque bloque of
+
+        Just TSala ->
+            let erroresBloque = validarBloque TSala bloque
+            in if not (null erroresBloque)
+               then (erroresBloque ++ errores, salas, objetos)
+               else
+                   case reconocerCompleto leerBloqSala (textoBloque bloque) of
+                       Just sala ->
+                           (errores, sala:salas, objetos)
+
+                       Nothing ->
+                           (errorReconocimiento "SALA" : errores, salas, objetos)
+
+        Just TObjeto ->
+            let erroresBloque = validarBloque TObjeto bloque
+            in if not (null erroresBloque)
+               then (erroresBloque ++ errores, salas, objetos)
+               else
+                   case reconocerCompleto leerBloqObj (textoBloque bloque) of
+                       Just objeto ->
+                           (errores, salas, objeto:objetos)
+
+                       Nothing ->
+                           (errorReconocimiento "OBJETO" : errores, salas, objetos)
+
+        _ ->
+            (validarDesconocido bloque ++ errores, salas, objetos)
+
+    where
+        errorReconocimiento nombre =
+            V1 (numeroBloque bloque)
+               (FormaClaveValor ("Bloque " ++ nombre ++ " no reconocido"))
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
@@ -63,9 +105,6 @@ agruparPor obtenerClave =
                 [valor]
                 mapa
 
-data TipoBloque = TCabecera | TObjeto | TSala
-    deriving (Eq, Show)
-
 -- (Nombre del campo, obligatorio, puede repetirse)
 reglas :: TipoBloque -> [(String, Bool, Bool)]
 reglas TCabecera =
@@ -97,6 +136,53 @@ partirClave linea =
                 -> Just (nombre, valor)
 
         _ -> Nothing
+
+-- Función para validar la sintaxis de un bloque conocido
+validarBloque :: TipoBloque -> Bloque -> [ErrorMundo]
+validarBloque tipo bloque =
+    concatMap (validarLinea tipo) bloque
+    ++ validarCantidad tipo bloque
+
+validarLinea :: TipoBloque -> LineaNumerada -> [ErrorMundo]
+validarLinea tipo lineaNumerada@(numero, linea) =
+    case partirClave linea of
+        Nothing ->
+            [V1 numero (FormaClaveValor linea)]
+
+        Just (nombre, valor)
+            | nombre `elem` permitidas ->
+                validarValor lineaNumerada nombre valor
+
+            | otherwise ->
+                [V1 numero (ClaveDesconocida nombre)]
+
+    where
+        permitidas = [nombre | (nombre, _, _) <- reglas tipo]
+
+validarCantidad :: TipoBloque -> Bloque -> [ErrorMundo]
+validarCantidad tipo bloque =
+    concatMap revisar (reglas tipo)
+    where
+        revisar (nombre, obligatorio, repetible) =
+            let apariciones =
+                    [ numero
+                    | (numero, linea) <- bloque
+                    , Just (clave, _) <- [partirClave linea]
+                    , clave == nombre
+                    ]
+
+                ausentes =
+                    [ V1 (numeroBloque bloque) (CampoAusente nombre)
+                    | obligatorio && null apariciones
+                    ]
+
+                repetidos =
+                    [ V1 numero (CampoRepetido nombre)
+                    | not repetible
+                    , numero <- drop 1 apariciones
+                    ]
+
+            in ausentes ++ repetidos
 
 validarValor :: LineaNumerada -> String -> String -> [ErrorMundo]
 validarValor (numero, linea) nombre valor =
@@ -137,6 +223,49 @@ validarValor (numero, linea) nombre valor =
             case reconocerCompleto reconocedor linea of
                 Just _  -> []
                 Nothing -> [V1 numero errorV]
+
+validarDesconocido :: Bloque -> [ErrorMundo]
+validarDesconocido [] = []
+
+validarDesconocido ((numero, linea):resto) =
+    V1 numero errorEncabezado : concatMap revisar resto
+    where
+        conocidas =
+            [ nombre
+            | tipo <- [TCabecera, TObjeto, TSala]
+            , (nombre, _, _) <- reglas tipo
+            ]
+
+        errorEncabezado =
+            case partirClave linea of
+                Just (nombre, _)
+                    | nombre `notElem` conocidas ->
+                        ClaveDesconocida nombre
+
+                _ ->
+                    FormaClaveValor
+                        ("Encabezado de bloque inválido: " ++ linea)
+
+        revisar actual@(n, texto) =
+            case partirClave texto of
+                Nothing ->
+                    [V1 n (FormaClaveValor texto)]
+
+                Just (nombre, valor)
+                    | nombre `elem` conocidas ->
+                        validarValor actual nombre valor
+
+                    | otherwise ->
+                        [V1 n (ClaveDesconocida nombre)]
+
+tipoBloque :: Bloque -> Maybe TipoBloque
+tipoBloque ((_, linea):_) =
+    case partirClave linea of
+        Just ("SALA", _)   -> Just TSala
+        Just ("OBJETO", _) -> Just TObjeto
+        _                  -> Nothing
+
+tipoBloque [] = Nothing
 
 errorSalida :: String -> String -> ErrorV1
 errorSalida linea valor =
