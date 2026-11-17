@@ -64,6 +64,7 @@ leerMundo texto =
                                     ++ validarV8 mundo
                                     ++ validarV9 mundo
                                     ++ validarV10 mundo
+                                    ++ validarPesoIndividual mundo
 
                             in case erroresSemanticos of
                                 [] -> Right mundo
@@ -260,6 +261,16 @@ validarV10 mundo =
                 , sala <- definiciones
                 , objeto <- salaObjetos sala
                 ]
+
+validarPesoIndividual :: Mundo -> [ErrorMundo]
+validarPesoIndividual mundo =
+    [ PesoExcesivo (objetoId objeto) (objetoPeso objeto) capacidad
+    | definiciones <- Map.elems (mundoObjetos mundo)
+    , objeto <- definiciones
+    , objetoPeso objeto > capacidad
+    ]
+    where
+        capacidad = mundoCapacidad mundo
 
 numeroBloque :: Bloque -> Int
 numeroBloque ((numero, _):_) = numero
