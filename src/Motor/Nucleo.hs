@@ -8,6 +8,29 @@ import Motor.Tipos
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
+iniciarPartida :: Mundo -> ([String], Estado)
+iniciarPartida mundo =
+    (encabezado ++ mensajesVictoria, estado)
+    where
+        inicial = estadoInicial mundo
+        (mensajesVictoria, estado) =
+            verificarVictoriaInicial inicial
+
+        encabezado =
+            [ "=== " ++ mundoTitulo mundo ++ " ==="
+            , "Inicio: " ++ show (mundoInicio mundo)
+            , "Objetivo: " ++ descripcionMeta (mundoMeta mundo)
+            , "Capacidad: " ++ show (mundoCapacidad mundo) ++ " UPF"
+            , ""
+            , "Escribe 'mirar' para observar la sala actual."
+            ]
+
+        descripcionMeta (Llegar sala) =
+            "llegar a " ++ show sala
+
+        descripcionMeta (Llevar objeto sala) =
+            "llevar " ++ show objeto ++ " a " ++ show sala
+
 -- Recibe el Mundo 'm' ya validado y arma el estado inicial del juego con este
 estadoInicial :: Mundo -> Estado
 estadoInicial m = Estado
