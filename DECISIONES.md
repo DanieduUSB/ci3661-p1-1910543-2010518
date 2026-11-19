@@ -27,4 +27,10 @@ Se tomó la opción 3. Esta estructura está pensada no solo para representar el
 
 ### Consecuencias
 
+La verificación de repetidos de salas y objetos es O(1)
+
+Las búsquedas son O(1) igualmente
+
+El tipo no garantiza por si solo que todo lo interno respete el formato solicitado, se debe verificar en Motor.Mundo
+
 Ya con un mundo armado válido, cuando se busca una sala u objeto por su ID, la función retorna una lista de Sala u Objeto, por lo que hay que considerar que acceder al elemento específico es una función mas.
