@@ -65,6 +65,14 @@ testsComandos = TestList
         "comando con argumento, con mas de un argumento"
         Nothing
         (leerComando "soltar id objeto")
+    
+    , TestCase $ assertEqual 
+        "direccion norte sin ir"
+        (Just (Ir Norte)) (leerComando "norte")
+
+    , TestCase $ assertEqual 
+        "palabra desconocida sola sigue siendo invalida"
+        Nothing (leerComando "diagonal")
     ]
 
 -- Cada prueba individual tiene una de las siguientes estructuras:

@@ -1,5 +1,4 @@
 mirar
-ir norte
 tomar llave_magnetica
 ir norte
 ir arriba

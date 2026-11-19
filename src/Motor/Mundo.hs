@@ -49,10 +49,21 @@ leerMundo texto =
                                     (FormaClaveValor "Cabecera no reconocida")]
 
                         Just mundoCabecera ->
-                            let mundo = mundoCabecera
+                            let mundoSinCapacidad = mundoCabecera
                                     { mundoSalas = agruparPor salaId salas
                                     , mundoObjetos = agruparPor objetoId objetos
                                     }
+
+                                -- Si CAPACIDAD no aparece, leerCabecera deja 0
+                                -- como marca temporal. Aquí ya conocemos todos
+                                -- los objetos y podemos calcular la capacidad.
+                                capacidadFinal =
+                                    if mundoCapacidad mundoSinCapacidad == 0
+                                        then max 1 (capacidadRequerida mundoSinCapacidad)
+                                        else mundoCapacidad mundoSinCapacidad
+
+                                mundo = mundoSinCapacidad
+                                    { mundoCapacidad = capacidadFinal }
 
                                 erroresSemanticos =
                                     validarV2 mundo
@@ -316,7 +327,7 @@ reglas TCabecera =
     [ ("MUNDO", True, False)
     , ("INICIO", True, False)
     , ("META", True, False)
-    , ("CAPACIDAD", True, False)
+    , ("CAPACIDAD", False, False)
     ]
 
 reglas TObjeto =

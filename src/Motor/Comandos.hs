@@ -20,6 +20,7 @@ leerComando entrada =
         ["cargar", path]    -> Just (Cargar path)
         ["ayuda"]           -> Just Ayuda
         ["salir"]           -> Just Salir
+        [dir]               -> Ir <$> leerDirecion dir
         _                   -> Nothing
 
 
@@ -31,4 +32,4 @@ leerDirecion "este"     = Just Este
 leerDirecion "oeste"    = Just Oeste
 leerDirecion "arriba"   = Just Arriba
 leerDirecion "abajo"    = Just Abajo
-leerDirecion _          = Just Invalida
+leerDirecion _          = Nothing

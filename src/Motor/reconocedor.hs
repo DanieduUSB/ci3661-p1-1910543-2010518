@@ -123,13 +123,18 @@ leerCabecera texto =
     , [lme] <- [metas]
     , Just meta <- [reconocerCompleto lineaMeta lme]
 
-    -- Campo CAPACIDAD
+    -- CAPACIDAD es opcional. El 0 es una marca interna para indicar
+    -- que Motor.Mundo debe calcularla después de cargar todos los objetos.
     , let capacidades = filter (isPrefixOf "CAPACIDAD:") ls
-    , [lc] <- [capacidades]
-    , Just capacidad <- [reconocerCompleto lineaCapacidad lc]
+    , capacidad <- case capacidades of
+        []   -> [0]
+        [lc] -> case reconocerCompleto lineaCapacidad lc of
+            Just n  -> [n]
+            Nothing -> []
+        _    -> []
 
     -- Verificar que no existan campos adicionales
-    , length ls == 4
+    , length ls == 3 + length capacidades
     ]
 
 -- Reconocimiento de bloque de objeto

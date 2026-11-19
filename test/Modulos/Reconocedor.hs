@@ -76,4 +76,18 @@ testsReconocedor = TestList
                 (unlines ["SALA: plaza", "DESC: Una plaza.", "SALIDA: norte -> biblioteca", "SALIDA: sur -> calle"]) of
             Just sala -> assertEqual "dos direcciones" (2 :: Int) (Map.size (salaSalidas sala))
             Nothing -> assertFailure "No reconocio el bloque SALA"
+
+    , TestLabel "Cabecera admite omitir CAPACIDAD" $ TestCase $
+        case reconocerCompleto leerCabecera
+                (unlines ["MUNDO: Demo", "INICIO: entrada", "META: llegar a entrada"]) of
+            Just m -> assertEqual "marca de capacidad pendiente"
+                (0 :: Int) (mundoCapacidad m)
+            Nothing -> assertFailure "No reconocio la cabecera sin CAPACIDAD"
+
+    , TestLabel "Cabecera conserva CAPACIDAD explicita" $ TestCase $
+        case reconocerCompleto leerCabecera
+                (unlines ["MUNDO: Demo", "INICIO: entrada", "META: llegar a entrada", "CAPACIDAD: 7"]) of
+            Just m -> assertEqual "capacidad explicita"
+                (7 :: Int) (mundoCapacidad m)
+            Nothing -> assertFailure "No reconocio la cabecera con CAPACIDAD"
     ]

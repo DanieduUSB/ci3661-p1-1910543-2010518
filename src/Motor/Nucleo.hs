@@ -2,6 +2,7 @@ module Motor.Nucleo
     ( estadoInicial
     , verificarVictoriaInicial
     , ejecutar
+    , iniciarPartida
     ) where
 
 import Motor.Tipos
@@ -20,7 +21,7 @@ iniciarPartida mundo =
             [ "=== " ++ mundoTitulo mundo ++ " ==="
             , "Inicio: " ++ show (mundoInicio mundo)
             , "Objetivo: " ++ descripcionMeta (mundoMeta mundo)
-            , "Capacidad: " ++ show (mundoCapacidad mundo) ++ " UPF"
+            , "Capacidad: " ++ show (mundoCapacidad mundo)
             , ""
             , "Escribe 'mirar' para observar la sala actual."
             ]
@@ -245,8 +246,8 @@ ejecutar Salir estado =
 
 -- Función Auxiliar: ayudaComando
 ayudaComando :: Comando -> String
-ayudaComando (Ir _)         = "ir <dirección>: Moverse en una dirección "
-                                ++"(norte, sur, este, oeste, arriba, abajo)"
+ayudaComando (Ir _)         = "ir <dirección> o <dirección>: Moverse en una dirección "
+                            ++ "(norte, sur, este, oeste, arriba, abajo)"
 ayudaComando Mirar          = "mirar: describir la sala actual"
 ayudaComando (Tomar _)      = "tomar <objeto>: Recoger un objeto"
 ayudaComando (Soltar _)     = "soltar <objeto>: Dejar un objeto"

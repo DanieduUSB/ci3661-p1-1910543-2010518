@@ -206,6 +206,24 @@ pruebas =
         (unlines (cabecera "entrada" "llegar a entrada" 10 ++ ["--", "--"] ++ sala "entrada" []))
     , verificarCondicion "45 Comentarios conservan el numero de linea"
         (prepararLineas "# comentario\n  OBJETO: llave # nota\n" == [(2, "OBJETO: llave")])
+    , verificarCondicion "46 Sin capacidad ni objetos: minimo positivo 1"
+        (case leerMundo (mundo ["MUNDO: Prueba", "INICIO: entrada", "META: llegar a entrada"]
+            [sala "entrada" []]) of
+            Right m -> mundoCapacidad m == 1
+            _ -> False)
+
+    , verificarCondicion "47 Sin capacidad: suma de requisitos y meta"
+        (case leerMundo (mundo ["MUNDO: Prueba", "INICIO: entrada", "META: llevar carnet a entrada"]
+            [sala "entrada" ["SALIDA: norte -> entrada requiere llave", "OBJETO: llave", "OBJETO: carnet"]
+            , objeto "llave" 2, objeto "carnet" 3]) of
+            Right m -> mundoCapacidad m == 5
+            _ -> False)
+
+    , verificarCondicion "48 Sin capacidad: objeto mas pesado"
+        (case leerMundo (mundo ["MUNDO: Prueba", "INICIO: entrada", "META: llegar a entrada"]
+            [sala "entrada" ["OBJETO: piedra"], objeto "piedra" 8]) of
+            Right m -> mundoCapacidad m == 8
+            _ -> False)
     ]
 
 esV1 :: ErrorMundo -> Bool
