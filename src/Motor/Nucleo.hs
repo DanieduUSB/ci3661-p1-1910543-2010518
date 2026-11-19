@@ -21,7 +21,7 @@ iniciarPartida mundo =
             [ "=== " ++ mundoTitulo mundo ++ " ==="
             , "Inicio: " ++ show (mundoInicio mundo)
             , "Objetivo: " ++ descripcionMeta (mundoMeta mundo)
-            , "Capacidad: " ++ show (mundoCapacidad mundo)
+            , "Capacidad: " ++ show (mundoCapacidad mundo) ++ "UPF"
             , ""
             , "Escribe 'mirar' para observar la sala actual."
             ]

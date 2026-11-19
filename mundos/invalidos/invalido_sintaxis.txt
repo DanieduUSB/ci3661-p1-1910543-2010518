@@ -1,0 +1,17 @@
+# Errores esperados: V1 - DESC repetida, direccion inexistente,
+# clave COLOR desconocida, identificador Llave invalido,
+# PESO no positivo y DESC ausente en un objeto.
+
+MUNDO: Prueba de sintaxis
+INICIO: entrada
+META: llegar a entrada
+CAPACIDAD: 5
+--
+SALA: entrada
+DESC: Una entrada.
+DESC: Esta descripcion esta repetida.
+SALIDA: diagonal -> entrada
+COLOR: rojo
+--
+OBJETO: Llave
+PESO: 0

@@ -1,0 +1,39 @@
+# Errores esperados: V2 sala entrada duplicada,
+# V3 destino sala_fantasma inexistente,
+# V4 requisito llave_inexistente,
+# V5 dos salidas norte desde entrada,
+# V6 objeto fantasma no definido,
+# V7 moneda colocada dos veces,
+# V8 meta en sala torre inexistente,
+# V9 sala secreto inalcanzable,
+# V10 reliquia necesaria pero no ubicada.
+
+MUNDO: Prueba semantica
+INICIO: entrada
+META: llevar reliquia a torre
+CAPACIDAD: 10
+--
+SALA: entrada
+DESC: Entrada principal.
+SALIDA: norte -> pasillo
+SALIDA: norte -> sala_fantasma requiere llave_inexistente
+OBJETO: moneda
+OBJETO: fantasma
+--
+SALA: pasillo
+DESC: Un pasillo.
+OBJETO: moneda
+--
+SALA: entrada
+DESC: Una segunda definicion de entrada.
+--
+SALA: secreto
+DESC: Una habitacion aislada.
+--
+OBJETO: moneda
+DESC: Una moneda.
+PESO: 1
+--
+OBJETO: reliquia
+DESC: Una reliquia.
+PESO: 3
