@@ -60,7 +60,7 @@ tests:
     main:                Spec.hs
     source-dirs:
     - test
-    - test/modulos
+    - test/Modulos
     other-modules:
     - Comandos
     - Nucleo
