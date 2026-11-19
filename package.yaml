@@ -45,7 +45,7 @@ library:
     - Motor.Serializador
 
 executables:
-  aventura-exe:
+  aventura:
     main:                Main.hs
     source-dirs:         app
     ghc-options:

@@ -227,7 +227,7 @@ ayudaComando Inventario     = "inventario: Mostrar los objetos en el inventario"
 ayudaComando (Guardar _)    = "guardar <archivo>: Guardar la partida en el archivo indicado"
 ayudaComando (Cargar _)     = "cargar <archivo>: Cargar una partida del archivo indicado"
 ayudaComando Ayuda          = "ayuda: Mostrar los comandos disponibles"
-ayudaComando Salir          = "salidar: Terminar el juego"
+ayudaComando Salir          = "salir: Terminar el juego"
 
 -- Función auxiliar verificarVictoria
 -- Recibe la meta, la sala a la que se puede avanzar, y el inventario.

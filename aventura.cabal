@@ -41,7 +41,7 @@ library
     , containers
   default-language: Haskell2010
 
-executable aventura-exe
+executable aventura
   main-is: Main.hs
   other-modules:
       Paths_aventura
