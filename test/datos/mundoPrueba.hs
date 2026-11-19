@@ -5,7 +5,6 @@ module Datos.MundoPrueba
 
 import qualified Data.Map.Strict as Map
 import Motor.Tipos
-import Motor.Nucleo
 
 ------------------------------
 -- ESTRUCTURAS PARA PRUEBAS --
