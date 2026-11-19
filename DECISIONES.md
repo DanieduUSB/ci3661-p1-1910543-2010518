@@ -34,3 +34,40 @@ Las búsquedas son O(1) igualmente
 El tipo no garantiza por si solo que todo lo interno respete el formato solicitado, se debe verificar en Motor.Mundo
 
 Ya con un mundo armado válido, cuando se busca una sala u objeto por su ID, la función retorna una lista de Sala u Objeto, por lo que hay que considerar que acceder al elemento específico es una función mas.
+
+## D2. Qué guarda el Estado
+
+Autor: Daniel Quijada (20-10518)
+
+### Contexto
+
+Durante una partida, el jugador puede realizar distintas acciones que afectan tanto los datos del jugador como de su entorno. La pregunta mas importante en este punto es: ¿Vale la pena mantener los datos originales, o es mejor modificar estos datos y desechar completamente lo anterior?
+
+### Opciones
+
+1. Crear una copia de las salas y objetos al inicio de la partida y después de cada cambio sin preservar lo anterior
+
+2. Mantener una copia del mundo y cambiar solamente la información necesaria
+
+### Decisión
+
+Se optó por la opción 2. Básicamente no tiene sentido una separación de tipos si ambos representan virtualmente lo mismo, si Estado copia el mundo entero en sí mismo. Es mas fácil y rápido de implementar un tipo de Dato Estado que simplemente registre los cambios necesarios.
+
+Por lo tanto se implementó data Estado con los atributos:
+
+- estadoMundo: Mundo con su configuración inicial
+- salaActual: ID de la sala donde se encuentra el jugador
+- inventario: Lista de IDs de los objetos del jugador
+- objetosPorSala: Map cuya clave es el ID de la sala y el valor un conjunto con los objetos. Como los objetos no se repiten, el conjunto es ideal
+- salidasDesbloqueadas: Se mencionará este atributo en particular en un ADR posterior, pues corresponde a una decisión tomada más adelante
+- juegoTerminado: Booleano que indica si el juego terminó o no
+
+### Consecuencias
+
+Se evita modificar la estructura original del mundo y se simplifica la ejecución de comandos puros.
+
+Por ejemplo, ejecutar (Tomar idObj) elimina el objeto de objetosPorSala y lo incorpora al inventario. Soltar realiza la operación contraria.
+
+Esto también permite que un objeto sea soltado en una sala distinta de su ubicación original.
+
+Como contrapartida, es necesario mantener la consistencia entre inventario y salas para evitar objetos duplicados o desaparecidos.
