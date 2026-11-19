@@ -1,5 +1,6 @@
 module Motor.Nucleo
     ( estadoInicial
+    , verificarVictoriaInicial
     , ejecutar
     ) where
 
@@ -23,6 +24,17 @@ estadoInicial m = Estado
     }
 
 
+-- Comprueba si la meta se cumple en el estado inicial
+verificarVictoriaInicial :: Estado -> ([String], Estado)
+verificarVictoriaInicial estado
+    | verificarVictoria meta (salaActual estado) (inventario estado) =
+        (["*** ¡Has ganado! ***"], estado { juegoTerminado = True })
+    | otherwise =
+        ([], estado)
+    where
+        meta = mundoMeta (estadoMundo estado)
+
+
 
 -- Para cada comando existente realiza una acción distinta
 ejecutar :: Comando -> Estado -> ([String], Estado)
@@ -35,13 +47,16 @@ ejecutar (Ir dir) estado =
         h:_
             -- La salida está bloqueada
             | not (puedeCruzar h estado) ->
-                (["La salida está bloqueada. Necesita " ++ show (salidaRequisito h)]
+                (["La salida está bloqueada. Necesita " ++
+                    case salidaRequisito h of
+                        Just idObj  -> show idObj
+                        Nothing     -> "un objeto desconocido? Rompiste el juego, felicidades"]
                 , estado
                 )
             -- La salida se puede cruzar y se cumple la meta
             | verificarVictoria meta (salidaDestino h) inv
                 -> (["*** ¡Has ganado! ***"]
-                    , nuevoEstado { juegoTerminado    = True }
+                    , nuevoEstado { juegoTerminado = True }
                     )
             -- La salida se puede cruzar
             | otherwise
@@ -53,7 +68,7 @@ ejecutar (Ir dir) estado =
                     { salaActual = salidaDestino h
                     , salidasDesbloqueadas = case salidaRequisito h of
                         Nothing -> salidasDesbloqueadas estado
-                        Just _ -> Set.insert
+                        Just _  -> Set.insert
                             (salaActual estado, dir)
                             (salidasDesbloqueadas estado)
                     }
@@ -85,13 +100,19 @@ ejecutar Mirar estado =
     , estado
     )
     where
+        idSala = salaActual estado
         salas = mundoSalas (estadoMundo estado)
         -- !! no falla ya que la sala actual debe estar en la lista de salas. Esta comprobación
         -- se hace en Motor.Mundo
-        sala = (Map.findWithDefault [] (salaActual estado) salas) !! 0
+        sala = (Map.findWithDefault [] idSala salas) !! 0
         desc = salaDesc sala
-        objs = map (\(IdObjeto objId) -> objId) (salaObjetos sala)
-        salidas = map (\s -> show s) (concat (Map.elems (salaSalidas sala)))
+        objs = map (\(IdObjeto objId) -> objId)
+            (Set.toList (Map.findWithDefault Set.empty idSala (objetosPorSala estado)))
+        salidas = map mostrarSalida (concat (Map.elems (salaSalidas sala)))
+        mostrarSalida salida = show salida ++
+            if Set.member (idSala, salidaDireccion salida) (salidasDesbloqueadas estado)
+                then " (Desbloqueada)"
+                else ""
 
 
 ejecutar (Tomar idObj) estado
