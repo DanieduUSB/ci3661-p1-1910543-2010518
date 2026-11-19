@@ -1,21 +1,79 @@
+-- Pruebas unitarias de los reconocedores ReadS.
 module Reconocedor (testsReconocedor) where
 
 import Test.HUnit
+import Motor.Tipos
+import Motor.Reconocedor
+import qualified Data.Map.Strict as Map
 
 testsReconocedor :: Test
-testsReconocedor = TestList []
+testsReconocedor = TestList
+    [ TestLabel "MUNDO acepta texto libre" $ TestCase $
+        assertEqual "titulo" (Just "Mi aventura")
+            (reconocerCompleto lineaMundo "MUNDO: Mi aventura")
 
--- Cada prueba individual tiene una de las siguientes estructuras:
--- TestCase $ assertEqual "descripción" resultadoEsperado resultadoReal
---  Ejemplo: TestCase $ assertEqual "Suma de dos números" 3 (sumar 1 2)
--- TestCase $ assertBool "descripcion" expresionBooleana
---  Ejemplo: TestCase $ assertBool "El número 1 pertenece a la lista" (elem 1 [1, 2])
+    , TestLabel "MUNDO rechaza titulo vacio" $ TestCase $
+        assertEqual "titulo vacio" (Nothing :: Maybe String)
+            (reconocerCompleto lineaMundo "MUNDO: ")
 
--- Para varias pruebas, usa la lista de la función testsReconocedor. Ejemplo:
---testsReconocedor = TestList
---    [ TestCase $ assertEqual "Suma de dos números" (3 :: Int) (1 + 2)
---    , TestCase $ assertBool "El número 1 pertenece a la lista" (elem (1 :: Int) [1, 2])
---    ]
+    , TestLabel "INICIO reconoce identificador" $ TestCase $
+        assertEqual "identificador" (Just (IdSala "plaza"))
+            (reconocerCompleto lineaInicio "INICIO: plaza")
 
--- Nota: (3 :: Int) y (1 :: Int) son porque Haskell no puede inferir si el tipo es Int o Integer
--- por lo que da warning al hacer stack test, pero en general no es obligatorio ponerle el tipo
+    , TestLabel "INICIO rechaza mayusculas" $ TestCase $
+        assertEqual "id invalido" (Nothing :: Maybe IdSala)
+            (reconocerCompleto lineaInicio "INICIO: Plaza")
+
+    , TestLabel "INICIO rechaza texto sobrante" $ TestCase $
+        assertEqual "entrada incompleta" (Nothing :: Maybe IdSala)
+            (reconocerCompleto lineaInicio "INICIO: plaza principal")
+
+    , TestLabel "META de llegar" $ TestCase $
+        assertEqual "llegar" (Just (Llegar (IdSala "biblioteca")))
+            (reconocerCompleto lineaMeta "META: llegar a biblioteca")
+
+    , TestLabel "META de llevar" $ TestCase $
+        assertEqual "llevar" (Just (Llevar (IdObjeto "carnet") (IdSala "biblioteca")))
+            (reconocerCompleto lineaMeta "META: llevar carnet a biblioteca")
+
+    , TestLabel "META mal formada" $ TestCase $
+        assertEqual "falta a" (Nothing :: Maybe Meta)
+            (reconocerCompleto lineaMeta "META: llevar carnet biblioteca")
+
+    , TestLabel "CAPACIDAD positiva" $ TestCase $
+        assertEqual "capacidad" (Just (5 :: Int))
+            (reconocerCompleto lineaCapacidad "CAPACIDAD: 5")
+
+    , TestLabel "CAPACIDAD cero invalida" $ TestCase $
+        assertEqual "capacidad cero" (Nothing :: Maybe Int)
+            (reconocerCompleto lineaCapacidad "CAPACIDAD: 0")
+
+    , TestLabel "PESO positivo" $ TestCase $
+        assertEqual "peso" (Just (2 :: Int))
+            (reconocerCompleto lineaPeso "PESO: 2")
+
+    , TestLabel "SALIDA sin requisito" $ TestCase $
+        assertEqual "sin requisito"
+            (Just (Salida Norte (IdSala "biblioteca") Nothing))
+            (reconocerCompleto lineaSalida "SALIDA: norte -> biblioteca")
+
+    , TestLabel "SALIDA con requisito" $ TestCase $
+        assertEqual "con requisito"
+            (Just (Salida Norte (IdSala "biblioteca") (Just (IdObjeto "llave"))))
+            (reconocerCompleto lineaSalida "SALIDA: norte -> biblioteca requiere llave")
+
+    , TestLabel "SALIDA direccion desconocida" $ TestCase $
+        assertEqual "direccion invalida" (Nothing :: Maybe Salida)
+            (reconocerCompleto lineaSalida "SALIDA: diagonal -> biblioteca")
+
+    , TestLabel "Objeto con peso por defecto" $ TestCase $
+        case reconocerCompleto leerBloqObj (unlines ["OBJETO: llave", "DESC: Una llave."]) of
+            Just obj -> assertEqual "peso por defecto" (1 :: Int) (objetoPeso obj)
+            Nothing -> assertFailure "No reconocio el bloque OBJETO"
+
+    , TestLabel "Sala reconoce multiples salidas" $ TestCase $
+        case reconocerCompleto leerBloqSala
+                (unlines ["SALA: plaza", "DESC: Una plaza.", "SALIDA: norte -> biblioteca", "SALIDA: sur -> calle"]) of
+            Just sala -> assertEqual "dos direcciones" (2 :: Int) (Map.size (salaSalidas sala))
+            Nothing -> assertFailure "No reconocio el bloque SALA"
+    ]

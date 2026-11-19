@@ -169,19 +169,21 @@ data Comando
 -- Errores
 
 data ErrorMundo
-    = V1    Int ErrorV1         -- Errores sintácticos
-    | V2a   IdSala              -- Dos salas mismo id
-    | V2b   IdObjeto            -- Dos objetos mismo id
-    | V3    IdSala IdSala       -- Salida a sala no existente
-    | V4    IdSala IdObjeto     -- Salida requiere objeto inexistente
-    | V5    IdSala Direccion    -- Dos salidas en misma dirección
-    | V6    IdSala IdObjeto     -- Sala contiene objeto no definido
-    | V7    IdObjeto            -- Objeto repetido
-    | V8a   IdSala              -- INICIO con sala inexistente
-    | V8b   IdSala              -- META con sala inexistente
-    | V8c   IdObjeto            -- META con objeto inexistente
-    | V9    IdSala              -- Sala inalcanzable desde INICIO
-    | V10   IdObjeto            -- Objeto necesario no ubicado
+    = V1    Int ErrorV1             -- Errores sintácticos
+    | V2a   IdSala                  -- Dos salas mismo id
+    | V2b   IdObjeto                -- Dos objetos mismo id
+    | V3    IdSala IdSala           -- Salida a sala no existente
+    | V4    IdSala IdObjeto         -- Salida requiere objeto inexistente
+    | V5    IdSala Direccion        -- Dos salidas en misma dirección
+    | V6    IdSala IdObjeto         -- Sala contiene objeto no definido
+    | V7    IdObjeto                -- Objeto repetido
+    | V8a   IdSala                  -- INICIO con sala inexistente
+    | V8b   IdSala                  -- META con sala inexistente
+    | V8c   IdObjeto                -- META con objeto inexistente
+    | V9    IdSala                  -- Sala inalcanzable desde INICIO
+    | V10   IdObjeto                -- Objeto necesario no ubicado
+    | PesoExcesivo IdObjeto Int Int -- Peso que supera la capacidad
+    | CapacidadInsuficiente Int Int -- Capacidad menor a la requerida
     deriving (Eq)
 
 instance Show ErrorMundo where
@@ -216,8 +218,17 @@ instance Show ErrorMundo where
         = "Error: V9 - La sala " ++ show sala
         ++ " no es alcanzable desde la sala inicial"
     show (V10 objeto)
-        = "Error: El objeto necesario " ++ show objeto
+        = "Error: V10 - El objeto necesario " ++ show objeto
         ++ " no esta colocado en ninguna sala"
+    show (PesoExcesivo objeto peso capacidad)
+        = "Error: Peso - El objeto " ++ show objeto
+        ++ " pesa " ++ show peso
+        ++ " y supera la capacidad " ++ show capacidad
+    show (CapacidadInsuficiente capacidad requerida)
+        = "Error: Peso - Capacidad insuficiente. Capacidad declarada: "
+        ++ show capacidad
+        ++ ", capacidad requerida: "
+        ++ show requerida
 
 data ErrorV1
     = ClaveDesconocida      String
