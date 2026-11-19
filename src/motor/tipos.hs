@@ -116,6 +116,7 @@ data Direccion
     | Oeste
     | Arriba
     | Abajo
+    | Invalida
     deriving (Eq, Ord, Show)
 
 -- Meta

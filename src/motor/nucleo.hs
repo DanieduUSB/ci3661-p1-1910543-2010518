@@ -39,6 +39,11 @@ verificarVictoriaInicial estado
 -- Para cada comando existente realiza una acción distinta
 ejecutar :: Comando -> Estado -> ([String], Estado)
 
+ejecutar (Ir Invalida) estado =
+    ( ["Dirección inválida"
+      , "Válidas: norte, sur, este, oeste, arriba, abajo"]
+    , estado)
+
 ejecutar (Ir dir) estado =
     case salida of
         -- Caso: No hay una salida en esa dirección

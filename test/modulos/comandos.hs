@@ -18,7 +18,7 @@ testsComandos = TestList
 
     , TestCase $ assertEqual
         "ir con dirección no existente"
-        Nothing
+        (Just (Ir Invalida))
         (leerComando "ir calacras")
 
     , TestCase $ assertEqual

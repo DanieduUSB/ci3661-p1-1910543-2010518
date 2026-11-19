@@ -31,4 +31,4 @@ leerDirecion "este"     = Just Este
 leerDirecion "oeste"    = Just Oeste
 leerDirecion "arriba"   = Just Arriba
 leerDirecion "abajo"    = Just Abajo
-leerDirecion _          = Nothing
+leerDirecion _          = Just Invalida
