@@ -13,6 +13,7 @@ import Datos.EstadoPrueba
 testsNucleo :: Test
 testsNucleo = TestList
     [ TestLabel "Estado inicial"                    testEstadoInicial
+    , TestLabel "Inicio con informacion del mundo"  testIniciarPartida
     , TestLabel "Inventario vacío"                  testInventarioVacio
     , TestLabel "Tomar objeto"                      testTomar
     , TestLabel "Tomar objeto inexistente en sala"  testTomarAusente
@@ -51,6 +52,27 @@ testEstadoInicial = TestCase $ do
     
     assertBool "No hay salidas desbloqueadas"
         (Set.null (salidasDesbloqueadas estadoPrueba))
+
+
+testIniciarPartida :: Test
+testIniciarPartida = TestCase $ do
+    let mundo = mundoMetaConRequisito
+        (mensajes, estado) = iniciarPartida mundo
+
+    assertBool "Muestra el titulo"
+        (any (isInfixOf (mundoTitulo mundo)) mensajes)
+    assertBool "Muestra la sala inicial"
+        (any (isInfixOf "Inicio: calle") mensajes)
+    assertBool "Muestra la meta con objeto"
+        (any (isInfixOf "Objetivo: llevar paracaidas a azotea") mensajes)
+    assertBool "Muestra la capacidad"
+        (any (isInfixOf "Capacidad: 11") mensajes)
+    assertEqual "Inicia en la sala correcta"
+        (IdSala "calle") (salaActual estado)
+
+    let (mensajesSinObjeto, _) = iniciarPartida mundoMetaSinRequisito
+    assertBool "Muestra la meta de llegar a una sala"
+        (any (isInfixOf "Objetivo: llegar a azotea") mensajesSinObjeto)
 
 
 testInventarioVacio :: Test

@@ -7,10 +7,10 @@ import System.IO (hFlush, hIsTerminalDevice, isEOF, stdin, stdout)
 
 import Motor.Comandos (leerComando)
 import Motor.Mundo (leerMundo)
-import Motor.Nucleo (estadoInicial, ejecutar, verificarVictoriaInicial)
+import Motor.Nucleo (iniciarPartida, ejecutar, verificarVictoriaInicial)
 import Motor.Persistencia (escribirArchivo, leerArchivo)
 import Motor.Serializador (deserializarEstado, serializarEstado)
-import Motor.Tipos (Comando(..), Estado(..), Mundo(..))
+import Motor.Tipos (Comando(..), Estado(..), Mundo)
 
 -- Interpreta los argumentos del ejecutable.
 main :: IO ()
@@ -46,18 +46,13 @@ validarArchivo ruta = do
     _ <- cargarMundo ruta
     putStrLn "Mundo válido."
 
--- Inicia la partida e imprime el titulo y la sala inicial.
+-- Inicia la partida sin describir automaticamente la sala actual.
 iniciarJuego :: FilePath -> IO ()
 iniciarJuego ruta = do
     mundo <- cargarMundo ruta
-    putStrLn (mundoTitulo mundo)
 
-    let inicial = estadoInicial mundo
-        (descripcion, _) = ejecutar Mirar inicial
-        (mensajesVictoria, estado) = verificarVictoriaInicial inicial
-
-    imprimirMensajes descripcion
-    imprimirMensajes mensajesVictoria
+    let (mensajes, estado) = iniciarPartida mundo
+    imprimirMensajes mensajes
 
     unless (juegoTerminado estado) $ do
         interactivo <- hIsTerminalDevice stdin
@@ -114,17 +109,8 @@ ejecutarComando (Cargar ruta) estado = do
                 Right recuperado ->
                     return (["Partida cargada desde " ++ ruta], recuperado)
 
-ejecutarComando comando estado = do
-    let (mensajes, nuevoEstado) = ejecutar comando estado
-
-        -- Mostrar la descripcion al entrar en otra sala.
-        descripcion = case comando of
-            Ir _ | salaActual nuevoEstado /= salaActual estado
-                 , not (juegoTerminado nuevoEstado) ->
-                     fst (ejecutar Mirar nuevoEstado)
-            _ -> []
-
-    return (mensajes ++ descripcion, nuevoEstado)
+ejecutarComando comando estado =
+    return (ejecutar comando estado)
 
 imprimirMensajes :: [String] -> IO ()
 imprimirMensajes = mapM_ putStrLn

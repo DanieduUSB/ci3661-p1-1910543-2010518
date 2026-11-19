@@ -1,0 +1,22 @@
+mirar
+ir norte
+tomar llave_magnetica
+ir norte
+ir arriba
+ir oeste
+tomar palanca
+ir este
+ir arriba
+ir este
+tomar llave
+ir oeste
+ir abajo
+ir este
+tomar paracaidas
+inventario
+soltar llave
+ir oeste
+ir este
+ir oeste
+ir arriba
+ir arriba
