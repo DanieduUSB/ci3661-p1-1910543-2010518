@@ -231,3 +231,27 @@ La separación permite probar los reconocedores individualmente sin necesidad de
 Además, facilita distinguir los errores sintácticos de los semánticos y evita que los reconocedores individuales deban conocer todas las entidades declaradas en el mundo.
 
 Como contrapartida, ambos módulos están relacionados: una modificación del formato de entrada puede requerir cambios en los reconocedores y en las reglas de validación de `Motor.Mundo`.
+
+## D8. Desbloqueo permanente e independiente de salidas
+
+Autor: Daniel
+
+### Contexto
+
+Las salidas pueden exigir un objeto para atravesarlas. Era necesario decidir si ese requisito debe volver a cumplirse en cada cruce y qué sucede con la salida de regreso. La decisión también afecta la variante Peso, porque conservar permanentemente llaves y herramientas ocupa capacidad de inventario.
+
+### Opciones
+
+1. Exigir el objeto cada vez que se atraviese una salida.
+2. Desbloquear permanentemente todas las conexiones entre dos salas tras el primer cruce.
+3. Desbloquear permanentemente solo la salida dirigida que se atravesó con éxito.
+
+### Decisión
+
+Se escogió la opción 3. `Estado` mantiene `salidasDesbloqueadas :: Set (IdSala, Direccion)`. La función `puedeCruzar` de `Motor.Nucleo` permite el paso cuando la salida no tiene requisito, el jugador lleva el objeto correspondiente o la salida ya está desbloqueada. El desbloqueo se registra al cruzar exitosamente una salida que tenía requisito; no se desbloquea automáticamente el sentido contrario.
+
+### Consecuencias
+
+El jugador puede soltar objetos que ya utilizó para abrir rutas y así liberar capacidad. El modelo representa con precisión el sentido de cada salida, incluso cuando las conexiones no son bidireccionales.
+
+Los desbloqueos forman parte del estado dinámico y deben conservarse al guardar una partida.
