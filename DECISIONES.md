@@ -71,3 +71,112 @@ Por ejemplo, ejecutar (Tomar idObj) elimina el objeto de objetosPorSala y lo inc
 Esto también permite que un objeto sea soltado en una sala distinta de su ubicación original.
 
 Como contrapartida, es necesario mantener la consistencia entre inventario y salas para evitar objetos duplicados o desaparecidos.
+
+## D3. Organización y orden de los bloques del mundo
+
+Autor: Daniela Gragirena (19-10543)
+
+### Contexto
+
+Para reconocer un mundo a partir de un archivo de texto, era necesario establecer cómo organizar la información correspondiente a la cabecera, las salas y los objetos.
+
+El principal problema era decidir si los campos y bloques debían seguir un orden estricto o si se podía permitir cierta flexibilidad, sin dificultar el reconocimiento y la validación del mundo.
+
+### Opciones
+
+1. Establecer un orden estricto para todos los campos y bloques del archivo.
+2. Permitir que todos los campos y bloques aparezcan en cualquier posición, sin restricciones.
+3. Organizar el archivo en bloques, manteniendo algunas reglas de estructura, pero permitiendo flexibilidad en el orden de sus elementos.
+
+### Decisión
+
+Se escogió la opción 3. Se decidió organizar el archivo en bloques separados por `--`, donde el primero corresponde obligatoriamente a la cabecera y los siguientes pueden ser bloques de salas u objetos en cualquier orden.
+
+Dentro de la cabecera, los campos `MUNDO`, `INICIO`, `META` y, opcionalmente, `CAPACIDAD` pueden aparecer en cualquier orden, siempre que pertenezcan al mismo bloque.
+
+Para los bloques de salas y objetos, se estableció que su primera línea debe indicar el tipo de bloque mediante `SALA` u `OBJETO`, respectivamente. Los demás campos pueden aparecer en cualquier orden, respetando cuáles son obligatorios y cuáles pueden repetirse.
+
+De esta forma, las definiciones de salas y objetos pueden intercalarse libremente, y dentro de una sala también pueden mezclarse las líneas `SALIDA` y `OBJETO`, sin necesidad de agruparlas.
+
+### Consecuencias
+
+Se obtiene un formato más flexible y sencillo de escribir, ya que no es necesario recordar un orden específico para todos los campos.
+
+Se facilita la modificación de los mundos, permitiendo agregar salas, objetos y salidas sin reorganizar completamente el archivo.
+
+El reconocimiento puede identificar cada bloque por su primera línea y procesar sus campos según sus nombres, independientemente del orden en que aparezcan.
+
+## D4. Tratamiento de comentarios en los archivos del mundo
+
+Autor: Daniela Gragirena (19-10543)
+
+### Contexto
+
+Los archivos del mundo pueden contener una cantidad considerable de información, especialmente cuando incluyen muchas salas, objetos y salidas. Por esta razón, resulta útil permitir comentarios que expliquen partes del archivo sin afectar su reconocimiento.
+
+Inicialmente se contemplaba ignorar las líneas que comenzaran con el símbolo `#`. Sin embargo, también se consideró conveniente permitir comentarios al final de líneas que contienen información válida.
+
+### Opciones
+
+1. Permitir únicamente comentarios que ocupen una línea completa.
+2. Permitir comentarios tanto en líneas independientes como al final de líneas válidas.
+
+### Decisión
+
+Se escogió la opción 2. Se decidió que todo el contenido ubicado después del símbolo `#` fuera ignorado durante la preparación de las líneas.
+
+De esta manera, se pueden escribir comentarios independientes o agregar aclaraciones después de un campo válido, sin que el reconocedor intente interpretarlas como parte de su valor.
+
+Esta funcionalidad se implementó en `prepararLineas`, dentro de `Motor.Mundo`, antes de separar el archivo en bloques. También se eliminan los espacios sobrantes y se ignoran las líneas vacías, conservando los números originales de las líneas para reportar errores.
+
+### Consecuencias
+
+Se permite agregar aclaraciones junto a las definiciones de salas, objetos y salidas.
+
+El reconocimiento se simplifica porque los comentarios se eliminan antes de aplicar las comprobaciones sintácticas.
+
+Como contrapartida, el símbolo `#` queda reservado para comentarios, por lo que no puede formar parte del texto de una descripción u otro valor, ya que todo lo escrito después de él será ignorado.
+
+## D5. Cálculo de la capacidad mínima requerida
+
+Autor: Daniela Gragirena (19-10543)
+
+### Contexto
+
+La variante Peso establece que cada objeto tiene un peso y que el jugador no puede transportar objetos cuya suma supere su capacidad.
+
+Además de comprobar que ningún objeto individual supere la capacidad, era necesario decidir cómo determinar si la capacidad del jugador era suficiente para los objetos utilizados durante la aventura.
+
+También se decidió permitir que el campo CAPACIDAD fuera opcional. En ese caso, el motor debía asignar automáticamente un valor que tuviera en cuenta los pesos de los objetos y los requisitos del mundo.
+
+### Opciones
+
+1. Establecer una capacidad predeterminada fija para todos los mundos.
+2. Calcular la capacidad mínima exacta mediante una búsqueda de las posibles secuencias de acciones del jugador.
+3. Utilizar una fórmula simplificada que considere el objeto más pesado y la suma de los pesos de todos los objetos necesarios para las salidas y la meta.
+
+### Decisión
+
+Se escogió la opción 3. Se decidió utilizar una comprobación conservadora para evitar implementar una búsqueda completa de soluciones, que habría aumentado considerablemente la complejidad del motor.
+
+La capacidad requerida se calcula mediante la siguiente fórmula:
+
+**Capacidad requerida = máximo(1, peso del objeto más pesado, suma de los pesos de los objetos necesarios).**
+
+Se consideran objetos necesarios aquellos que aparecen como requisitos de alguna salida y, cuando la meta consiste en llevar un objeto a una sala, también el objeto de la meta.
+
+Cada objeto necesario se cuenta una sola vez, aunque aparezca como requisito de varias salidas. Si un objeto no tiene un peso declarado, se considera que pesa 1.
+
+Cuando el archivo incluye CAPACIDAD, se utiliza el valor indicado y se comprueba que sea suficiente según esta regla. Si el campo se omite, se asigna automáticamente la capacidad calculada. El valor mínimo permitido es 1.
+
+### Consecuencias
+
+Se garantiza que la capacidad calculada permite transportar cualquier objeto individual y, de ser necesario, todos los objetos considerados necesarios al mismo tiempo.
+
+La fórmula es sencilla de implementar y no requiere explorar las distintas rutas ni las combinaciones posibles de acciones del jugador.
+
+También permite que los mundos omitan el campo CAPACIDAD sin utilizar un valor fijo que podría resultar insuficiente.
+
+Sin embargo, esta fórmula no representa necesariamente la capacidad mínima real para completar una aventura. Como el jugador puede soltar objetos y las salidas pueden permanecer desbloqueadas después de atravesarlas, existen mundos que pueden resolverse transportando los objetos necesarios en distintos momentos.
+
+Por lo tanto, la validación puede rechazar algunos mundos que serían jugables con una capacidad menor. Se aceptó esta limitación a cambio de mantener una comprobación más conservadora.
