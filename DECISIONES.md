@@ -180,3 +180,25 @@ También permite que los mundos omitan el campo CAPACIDAD sin utilizar un valor 
 Sin embargo, esta fórmula no representa necesariamente la capacidad mínima real para completar una aventura. Como el jugador puede soltar objetos y las salidas pueden permanecer desbloqueadas después de atravesarlas, existen mundos que pueden resolverse transportando los objetos necesarios en distintos momentos.
 
 Por lo tanto, la validación puede rechazar algunos mundos que serían jugables con una capacidad menor. Se aceptó esta limitación a cambio de mantener una comprobación más conservadora.
+
+## D6. Acumulación y clasificación de errores del mundo
+
+Autor: Daniel
+
+### Contexto
+
+El motor debe informar los errores de un mundo sin detener la validación ante el primer problema. Además, conviene diferenciar los errores de formato de los problemas semánticos, como referencias a salas u objetos inexistentes, para ofrecer mensajes útiles y permitir su corrección.
+
+### Opciones
+
+1. Devolver un único error mediante `Either ErrorMundo Mundo`, deteniéndose al primer fallo.
+2. Devolver únicamente mensajes de texto, sin tipos específicos de error.
+3. Representar los errores mediante constructores de `ErrorMundo`, acumularlos en una lista y distinguir los errores sintácticos de los semánticos.
+
+### Decisión
+
+Se escogió la opción 3. `leerMundo` mantiene la firma `String -> Either [ErrorMundo] Mundo`. Se utiliza `ErrorSintactico Int ErrorV1` para asociar los errores de reconocimiento con su número de línea, y otros constructores de `ErrorMundo` para las comprobaciones semánticas. Las validaciones independientes reúnen sus errores antes de devolver el resultado final.
+
+### Consecuencias
+
+El usuario puede corregir varios errores de una sola vez y las pruebas pueden verificar cada categoría de error sin depender únicamente de mensajes literales. A cambio, hay que organizar cuidadosamente las dependencias entre comprobaciones: algunas validaciones no pueden ejecutarse de forma segura si todavía no se reconocieron los datos de los que dependen.
