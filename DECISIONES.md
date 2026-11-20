@@ -202,3 +202,32 @@ Se escogió la opción 3. `leerMundo` mantiene la firma `String -> Either [Error
 ### Consecuencias
 
 El usuario puede corregir varios errores de una sola vez y las pruebas pueden verificar cada categoría de error sin depender únicamente de mensajes literales. A cambio, hay que organizar cuidadosamente las dependencias entre comprobaciones: algunas validaciones no pueden ejecutarse de forma segura si todavía no se reconocieron los datos de los que dependen.
+
+## D7. Separación entre reconocimiento sintáctico y validación del mundo
+
+Autor: Daniela
+
+### Contexto
+
+El archivo del mundo combina reglas de sintaxis —claves, separadores, direcciones y metas— con restricciones semánticas que requieren conocer el conjunto de salas y objetos declarados. Mezclar ambas responsabilidades dificulta localizar fallos, reutilizar funciones y probarlas por separado.
+
+### Opciones
+
+1. Resolver reconocimiento y validación en una sola función extensa.
+2. Separar los reconocedores de fragmentos de texto de las comprobaciones necesarias para construir y validar un mundo completo.
+
+### Decisión
+
+Se eligió la opción 2. `Motor.Reconocedor` concentra las funciones encargadas de interpretar las distintas estructuras del archivo mediante reconocedores `ReadS`, incluyendo líneas individuales y bloques completos de cabecera, salas y objetos.
+
+Por su parte, `Motor.Mundo` prepara las líneas, organiza los bloques y coordina las validaciones sintácticas y semánticas. Primero comprueba la estructura de los bloques y sus campos, utilizando los reconocedores del otro módulo para validar sus valores. Posteriormente, construye el mundo completo y ejecuta las verificaciones de referencias, duplicados, alcanzabilidad y capacidad.
+
+Los errores sintácticos conservan los números originales de las líneas para facilitar su identificación.
+
+### Consecuencias
+
+La separación permite probar los reconocedores individualmente sin necesidad de construir un mundo completo, mientras que las validaciones globales permanecen centralizadas en `Motor.Mundo`.
+
+Además, facilita distinguir los errores sintácticos de los semánticos y evita que los reconocedores individuales deban conocer todas las entidades declaradas en el mundo.
+
+Como contrapartida, ambos módulos están relacionados: una modificación del formato de entrada puede requerir cambios en los reconocedores y en las reglas de validación de `Motor.Mundo`.
