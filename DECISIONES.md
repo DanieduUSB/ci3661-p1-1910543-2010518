@@ -281,3 +281,31 @@ La lógica puede probarse sin crear archivos y el manejo de errores de entrada/s
 Las funciones de persistencia no determinan si el contenido es válido: esa decisión corresponde a los módulos que interpretan el texto.
 
 `Main` requiere manejar explícitamente los resultados de cada operación.
+
+## D10. Formato de las partidas y reconstrucción del estado por identificadores
+
+Autor: Daniel
+
+### Contexto
+
+Al guardar una partida es necesario conservar los cambios producidos por el jugador sin duplicar el mundo completo.
+
+### Opciones
+
+1. Guardar todo el `Estado` mediante su instancia de `Show`.
+2. Guardar el mundo completo y el estado dinámico en un formato propio.
+3. Guardar únicamente los datos dinámicos, los identificadores relacionados y una referencia al mundo original.
+
+### Decisión
+
+Se escogió la opción 3. `serializarEstado :: Estado -> String` genera un formato textual con título del mundo, sala actual, inventario, objetos por sala, salidas desbloqueadas y condición de finalización. `deserializarEstado :: Mundo -> String -> Either String Estado` recibe el mundo ya cargado, interpreta esos datos y reconstruye el estado.
+
+Se decidió asumir que los títulos de los mundos son únicos, por lo que el título identifica el mundo al cargar una partida. La deserialización comprueba la existencia y unicidad de objetos y salas, las salidas registradas y el respeto de la capacidad del inventario.
+
+### Consecuencias
+
+No hace falta volver a guardar las descripciones, pesos y conexiones originales, y los archivos de partida son legibles como texto.
+
+Es posible rechazar archivos inconsistentes sin alterar la partida activa.
+
+La principal limitación es que dos versiones de un mundo podrían compartir título sin ser equivalentes. La solución elegida trabaja bajo la idea de que al cargar una partida, el mundo cargado originalmente se mantiene, y que no deberían haber dos mundos con el mismo título.
