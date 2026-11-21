@@ -113,4 +113,6 @@ ejecutarComando comando estado =
     return (ejecutar comando estado)
 
 imprimirMensajes :: [String] -> IO ()
-imprimirMensajes = mapM_ putStrLn
+imprimirMensajes mensajes = do
+    mapM_ putStrLn mensajes
+    unless (null mensajes) $ putStrLn ""
