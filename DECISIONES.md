@@ -197,7 +197,7 @@ El motor debe informar los errores de un mundo sin detener la validación ante e
 
 ### Decisión
 
-Se escogió la opción 3. `leerMundo` mantiene la firma `String -> Either [ErrorMundo] Mundo`. Se utiliza `ErrorSintactico Int ErrorV1` para asociar los errores de reconocimiento con su número de línea, y otros constructores de `ErrorMundo` para las comprobaciones semánticas. Las validaciones independientes reúnen sus errores antes de devolver el resultado final.
+Se escogió la opción 3. `leerMundo` mantiene la firma `String -> Either [ErrorMundo] Mundo`. Se utiliza `ErrorMundo V1 Int ErrorV1` para asociar los errores de reconocimiento con su número de línea, y otros constructores de `ErrorMundo` para las comprobaciones semánticas. Las validaciones independientes reúnen sus errores antes de devolver el resultado final.
 
 ### Consecuencias
 
