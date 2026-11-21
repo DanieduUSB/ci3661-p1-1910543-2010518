@@ -255,3 +255,29 @@ Se escogió la opción 3. `Estado` mantiene `salidasDesbloqueadas :: Set (IdSala
 El jugador puede soltar objetos que ya utilizó para abrir rutas y así liberar capacidad. El modelo representa con precisión el sentido de cada salida, incluso cuando las conexiones no son bidireccionales.
 
 Los desbloqueos forman parte del estado dinámico y deben conservarse al guardar una partida.
+
+## D9. Separación de operaciones de archivos, serialización y lógica del juego
+
+Autor: Daniel
+
+### Contexto
+
+Los comandos normales se ejecutan mediante `ejecutar :: Comando -> Estado -> ([String], Estado)`, una función pura. Sin embargo, leer mundos y guardar o cargar partidas requiere operaciones `IO`. Además, convertir el estado a texto no implica necesariamente acceder al sistema de archivos.
+
+### Opciones
+
+1. Incorporar `IO` directamente a `Motor.Nucleo` y cambiar la firma de `ejecutar`.
+2. Conservar un núcleo puro y concentrar lectura, escritura y conversión de datos en un único módulo.
+3. Separar la lectura/escritura de archivos de la serialización y dejar que `Main` coordine los comandos con efectos externos.
+
+### Decisión
+
+Se eligió la opción 3. `Motor.Persistencia` expone `leerArchivo :: FilePath -> IO (Either String String)` y `escribirArchivo :: FilePath -> String -> IO (Either String ())`. `Motor.Serializador` convierte entre `Estado` y `String` mediante funciones puras. `Main` es responsable de coordinar `Guardar` y `Cargar`, mientras `Motor.Nucleo` permanece dedicado a las transiciones puras del juego.
+
+### Consecuencias
+
+La lógica puede probarse sin crear archivos y el manejo de errores de entrada/salida queda separado del reconocimiento de mundos y partidas.
+
+Las funciones de persistencia no determinan si el contenido es válido: esa decisión corresponde a los módulos que interpretan el texto.
+
+`Main` requiere manejar explícitamente los resultados de cada operación.
